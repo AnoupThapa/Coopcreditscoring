@@ -890,7 +890,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Principal Repayment (NPR) / मूलधन भुक्तानी रकम (रु)
+                        Principal Repayment (NPR) / साँवा भुक्तानी रकम (रु)
                     </label>
                     <input type="number" id="repayment_principal" min="0" required placeholder="e.g., 1000000">
                 </div>
@@ -1001,14 +1001,14 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Lowest Monthly Milk (Liters) / सबैभन्दा कम मासिक दूध सङ्कलन (लिटर)
+                        Lowest Monthly Milk (Liters) / न्यूनतम मासिक सङ्कलन (लिटर)
                     </label>
                     <input type="number" id="milk_monthly_low" min="0" required placeholder="e.g., 40000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Milk Collected (Liters) / कुल सङ्कलित दूध (लिटर)
+                        Total Milk Collected (Liters) / कुल दूध सङ्कलन (लिटर)
                     </label>
                     <input type="number" id="milk_total" min="0" required placeholder="e.g., 600000">
                 </div>
@@ -1031,14 +1031,14 @@
 
                 <div class="form-group model-b-field hidden">
                     <label class="bilingual-label">
-                        Sold Products Value (NPR) [Model B] / बिक्री भएका उत्पादनको मूल्य (रु)
+                        Sold Products Value (NPR) [Model B] / बिक्री आम्दानीो मूल्य (रु)
                     </label>
                     <input type="number" id="sales_products" min="0" placeholder="e.g., 9000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Lean Month Expenses (NPR) / न्यूनतम महिना खर्च (रु)
+                        Lean Month Expenses (NPR) / औसत मासिक सञ्चालन खर्च(रु)
                     </label>
                     <input type="number" id="expenses_lean" min="0" required placeholder="e.g., 1041666">
                     <div class="input-hint">Monthly expenses during low season</div>
@@ -1058,14 +1058,14 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Member Loans (NPR) / सदस्यहरूलाई दिएको कुल ऋण (रु)
+                        Total Member Loans (NPR) /  सदस्य ऋण विवरण कुल(रु)
                     </label>
                     <input type="number" id="loans_members_total" min="0" required placeholder="e.g., 5000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        NPA Member Loans (NPR) / खराब / एनपीए सदस्य ऋण (रु)
+                        NPA Member Loans (NPR) / खराब / असुल हुन बाँकी ऋण (रु)
                     </label>
                     <input type="number" id="loans_npa" min="0" placeholder="e.g., 200000">
                     <div class="input-hint">Non-performing assets / overdue loans</div>
@@ -1087,7 +1087,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Secondary Collateral Value (NPR) / अतिरिक्त धितोको मूल्य (रु)
+                        Secondary Collateral Value (NPR) / अतिरिक्त/सहायक धितोको मूल्य (रु)
                     </label>
                     <input type="number" id="collateral_secondary" min="0" placeholder="e.g., 5000000">
                 </div>
@@ -1101,7 +1101,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Sales (NPR) / कुल बिक्री (रु)
+                        Total Sales (NPR) / कुल बिक्री आम्दानी (रु)
                     </label>
                     <input type="number" id="sales_total" min="0" required placeholder="e.g., 30000000">
                 </div>
@@ -1185,7 +1185,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Cold Storage Availability / भण्डारण / चिसो श्रृंखला उपलब्धता
+                        Cold Storage Availability /भण्डारण/चिसो उपलब्धता
                     </label>
                     <select id="storage_available" required>
                         <option value="yes">Yes / छ</option>
@@ -1251,7 +1251,7 @@
 
                 <div class="form-group existing-field hidden">
                     <label class="bilingual-label">
-                        Max DPD (Days) / सबैभन्दा धेरै ढिला भएको दिन
+                       Member Max DPD (Days) / सबैभन्दा धेरै ढिला भएको दिन
                     </label>
                     <input type="number" id="max_dpd_days" min="0" placeholder="e.g., 5">
                     <div class="input-hint">Days Past Due</div>
@@ -1259,7 +1259,7 @@
 
                 <div class="form-group existing-field hidden">
                     <label class="bilingual-label">
-                        Restructures (Past 3 yrs) / पछिल्ला ३ वर्षमा ऋण पुनःसंरचना संख्या
+                       Member Restructures (Past 3 yrs) / पछिल्ला ३ वर्षमा ऋण पुनःसंरचना संख्या
                     </label>
                     <input type="number" id="restructures" min="0" placeholder="e.g., 0">
                 </div>
@@ -2531,6 +2531,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+
 
 
 
