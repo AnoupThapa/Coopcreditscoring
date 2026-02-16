@@ -734,7 +734,49 @@
             color: #6b7280;
             margin-top: 5px;
         }
+
+        /* Buyer risk specific styles */
+        .buyer-risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .buyer-card {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .buyer-card:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .buyer-type-header {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .buyer-score-display {
+            font-size: 1.2em;
+            font-weight: 800;
+            color: var(--success);
+            margin-top: 10px;
+        }
+
+        .buyer-risk-high { color: var(--danger); }
+        .buyer-risk-medium { color: var(--warning); }
+        .buyer-risk-low { color: var(--success); }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -807,6 +849,7 @@
         <button class="nav-btn" onclick="showTab('financial')">Financial</button>
         <button class="nav-btn" onclick="showTab('milk')">Milk Metrics</button>
         <button class="nav-btn" onclick="showTab('operations')">Operations</button>
+        <button class="nav-btn" onclick="showTab('buyers')">Buyer Risk</button>
         <button class="nav-btn" onclick="showTab('management')">Management</button>
         <button class="nav-btn" onclick="showTab('farmers')">Farmers</button>
         <button class="nav-btn" onclick="showTab('declaration')">Declarations</button>
@@ -814,9 +857,6 @@
     </div>
 
     <form id="scoringForm" onsubmit="event.preventDefault(); calculateScores();">
-        
-        <!-- Sections remain the same as previous version -->
-        <!-- [Previous form sections remain unchanged...] -->
         
         <!-- Section 1: Basic Information -->
         <div class="form-section active" id="section_basic">
@@ -882,7 +922,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        EBITDA (NPR) / सञ्चालन नाफा/मुनाफा (रु)
+                        EBITDA (NPR) / संचालनबाट भएको आम्दानी (रु)
                     </label>
                     <input type="number" id="ebitda" required placeholder="e.g., 2000000">
                     <div class="input-hint">Operating Income</div>
@@ -890,28 +930,28 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Principal Repayment (NPR) / साँवा भुक्तानी रकम (रु)
+                        Principal Repayment (NPR) / मूलधन भुक्तानी रकम (रु)
                     </label>
                     <input type="number" id="repayment_principal" min="0" required placeholder="e.g., 1000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Interest Payment (NPR) / ब्याज खर्च (रु)
+                        Interest Payment (NPR) / ब्याज रकम (रु)
                     </label>
                     <input type="number" id="repayment_interest" min="0" required placeholder="e.g., 250000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Assets (NPR) /  जम्मा सम्पत्तिति (रु)
+                        Total Assets (NPR) / कुल सम्पत्ति (रु)
                     </label>
                     <input type="number" id="assets_total" min="0" required placeholder="e.g., 15000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Liabilities (NPR) /  जम्मा दायित्व (रु)
+                        Total Liabilities (NPR) / कुल दायित्व (रु)
                     </label>
                     <input type="number" id="liabilities_total" min="0" required placeholder="e.g., 9000000">
                 </div>
@@ -932,21 +972,21 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Debt (NPR) / कुल ऋण तथा दायित्व (रु)
+                        Total Debt (NPR) / कुल ऋण (रु)
                     </label>
                     <input type="number" id="debt_total" min="0" required placeholder="e.g., 9000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Equity (NPR) /  पूँजी कोष / इक्विटी (रु)
+                        Equity (NPR) / पूँजी / इक्विटी (रु)
                     </label>
                     <input type="number" id="equity" min="0" required placeholder="e.g., 6000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Grant Income (NPR) / अनुदान आम्दानी (रु)
+                        Grant Income (NPR) / अनुदानबाट प्राप्त आम्दानी (रु)
                     </label>
                     <input type="number" id="income_grant" min="0" placeholder="e.g., 200000">
                 </div>
@@ -961,23 +1001,37 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Average Inventory (NPR) / औसत मौज्दात विवरण (रु)
+                        Average Inventory (NPR) / औसत भण्डारण मूल्य (रु)
                     </label>
                     <input type="number" id="inventory_avg" min="0" placeholder="e.g., 1000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        COGS (NPR) / बिक्री गरिएको वस्तुको लागत  (रु)
+                        COGS (NPR) / लागत (रु)
                     </label>
                     <input type="number" id="cogs" min="0" required placeholder="e.g., 28000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Accounts Receivable (NPR) / लिन बाँकी रकम/पाउनु पर्ने हिसाब (रु)
+                        Accounts Receivable (NPR) / प्राप्त रकम (रु)
                     </label>
                     <input type="number" id="ar_total" min="0" placeholder="e.g., 2500000">
+                </div>
+
+                <!-- Quality SOP Score moved to Section 2 for Model B -->
+                <div class="form-group model-b-field hidden">
+                    <label class="bilingual-label">
+                        Quality SOP Score / गुणस्तर प्रक्रिया (SOP) स्कोर
+                    </label>
+                    <select id="quality_sop" required>
+                        <option value="">Select / छान्नुहोस्</option>
+                        <option value="consistent">Consistent - सुसंगत</option>
+                        <option value="few_gaps">Few Gaps - केही कमजोरी</option>
+                        <option value="large_gaps">Large Gaps - धेरै कमजोरी</option>
+                    </select>
+                    <div class="input-hint" style="color: var(--secondary);">Required for Collection & Processing model</div>
                 </div>
             </div>
         </div>
@@ -1001,14 +1055,14 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Lowest Monthly Milk (Liters) / न्यूनतम मासिक सङ्कलन (लिटर)
+                        Lowest Monthly Milk (Liters) / सबैभन्दा कम मासिक दूध सङ्कलन (लिटर)
                     </label>
                     <input type="number" id="milk_monthly_low" min="0" required placeholder="e.g., 40000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Milk Collected (Liters) / कुल दूध सङ्कलन (लिटर)
+                        Total Milk Collected (Liters) / कुल सङ्कलित दूध (लिटर)
                     </label>
                     <input type="number" id="milk_total" min="0" required placeholder="e.g., 600000">
                 </div>
@@ -1031,14 +1085,14 @@
 
                 <div class="form-group model-b-field hidden">
                     <label class="bilingual-label">
-                        Sold Products Value (NPR) [Model B] / बिक्री आम्दानीो मूल्य (रु)
+                        Sold Products Value (NPR) [Model B] / बिक्री भएका उत्पादनको मूल्य (रु)
                     </label>
                     <input type="number" id="sales_products" min="0" placeholder="e.g., 9000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Lean Month Expenses (NPR) / औसत मासिक सञ्चालन खर्च(रु)
+                        Lean Month Expenses (NPR) / न्यूनतम महिना खर्च (रु)
                     </label>
                     <input type="number" id="expenses_lean" min="0" required placeholder="e.g., 1041666">
                     <div class="input-hint">Monthly expenses during low season</div>
@@ -1058,14 +1112,14 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Member Loans (NPR) /  सदस्य ऋण विवरण कुल(रु)
+                        Total Member Loans (NPR) / सदस्यहरूलाई दिएको कुल ऋण (रु)
                     </label>
                     <input type="number" id="loans_members_total" min="0" required placeholder="e.g., 5000000">
                 </div>
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        NPA Member Loans (NPR) / खराब / असुल हुन बाँकी ऋण (रु)
+                        NPA Member Loans (NPR) / खराब / एनपीए सदस्य ऋण (रु)
                     </label>
                     <input type="number" id="loans_npa" min="0" placeholder="e.g., 200000">
                     <div class="input-hint">Non-performing assets / overdue loans</div>
@@ -1087,7 +1141,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Secondary Collateral Value (NPR) / अतिरिक्त/सहायक धितोको मूल्य (रु)
+                        Secondary Collateral Value (NPR) / अतिरिक्त धितोको मूल्य (रु)
                     </label>
                     <input type="number" id="collateral_secondary" min="0" placeholder="e.g., 5000000">
                 </div>
@@ -1101,19 +1155,112 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Total Sales (NPR) / कुल बिक्री आम्दानी (रु)
+                        Total Sales (NPR) / कुल बिक्री (रु)
                     </label>
                     <input type="number" id="sales_total" min="0" required placeholder="e.g., 30000000">
                 </div>
             </div>
         </div>
 
-        <!-- Section 5: Management -->
+        <!-- Section 5: Buyer Concentration Risk -->
+        <div class="form-section" id="section_buyers">
+            <div class="section-header">
+                <div class="section-title">
+                    🏭 Buyer Concentration Risk
+                    <span class="section-badge">Section 5</span>
+                </div>
+            </div>
+
+            <div class="alert alert-info" style="margin-bottom: 20px;">
+                <strong>Buyer Risk Assessment:</strong> Evaluate the reliability and diversification of dairy buyers. 
+                Multiple strong buyers reduce concentration risk, while few unreliable buyers increase risk significantly.
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Total Number of Buyers / कुल खरिदकर्ता संख्या
+                    </label>
+                    <input type="number" id="buyer_total_count" min="1" required placeholder="e.g., 5">
+                    <div class="input-hint">Total active buyers purchasing milk/products</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Top 3 Buyers Sales (NPR) / शीर्ष ३ खरिदकर्ताबाट भएको बिक्री (रु)
+                    </label>
+                    <input type="number" id="buyer_top3_sales" min="0" required placeholder="e.g., 24000000">
+                    <div class="input-hint">Combined sales from top 3 buyers</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Single Largest Buyer Sales (NPR) / सबैभन्दा ठूलो खरिदकर्ताबाट बिक्री (रु)
+                    </label>
+                    <input type="number" id="buyer_single_max" min="0" required placeholder="e.g., 12000000">
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Government/Public Sector Buyers / सरकारी/सार्वजनिक क्षेत्रका खरिदकर्ता
+                    </label>
+                    <input type="number" id="buyer_govt_count" min="0" placeholder="e.g., 2">
+                    <div class="input-hint">Number of government-owned dairy buyers</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Large Private Dairy Buyers / ठूला निजी दुग्ध उद्योग खरिदकर्ता
+                    </label>
+                    <input type="number" id="buyer_large_private" min="0" placeholder="e.g., 2">
+                    <div class="input-hint">Established private dairies with strong market position</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Small/Uncertain Buyers / साना/अनिश्चित खरिदकर्ता
+                    </label>
+                    <input type="number" id="buyer_small_uncertain" min="0" placeholder="e.g., 1">
+                    <div class="input-hint">Small or financially unstable buyers</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Average Payment Days from Buyers / खरिदकर्ताबाट औसत भुक्तानी दिन
+                    </label>
+                    <input type="number" id="buyer_payment_days" min="0" required placeholder="e.g., 30">
+                    <div class="input-hint">Average days taken by buyers to pay</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Buyer Default History (Past 2 Years) / खरिदकर्ता चुक्ता इतिहास
+                    </label>
+                    <select id="buyer_default_history" required>
+                        <option value="">Select</option>
+                        <option value="none">No Defaults - कुनै चुक्ता छैन</option>
+                        <option value="minor">Minor Delays (1-15 days) - सामान्य ढिलाइ</option>
+                        <option value="moderate">Moderate Delays (16-45 days) - मध्यम ढिलाइ</option>
+                        <option value="severe">Severe Delays/Defaults (>45 days) - गम्भीर ढिलाइ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="bilingual-label">
+                        Contract Coverage with Buyers / खरिदकर्तासँग सम्झौता कभरेज (%)
+                    </label>
+                    <input type="number" id="buyer_contract_coverage" min="0" max="100" placeholder="e.g., 60">
+                    <div class="input-hint">% of sales covered by formal contracts</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Management (was 5) - Limit Discipline Score removed -->
         <div class="form-section" id="section_management">
             <div class="section-header">
                 <div class="section-title">
                     👥 Management & Governance
-                    <span class="section-badge">Section 5</span>
+                    <span class="section-badge">Section 6</span>
                 </div>
             </div>
 
@@ -1185,7 +1332,7 @@
 
                 <div class="form-group">
                     <label class="bilingual-label">
-                        Cold Storage Availability /भण्डारण/चिसो उपलब्धता
+                        Cold Storage Availability / भण्डारण / चिसो श्रृंखला उपलब्धता
                     </label>
                     <select id="storage_available" required>
                         <option value="yes">Yes / छ</option>
@@ -1193,29 +1340,17 @@
                     </select>
                 </div>
 
-                <div class="form-group model-b-field hidden">
-                    <label class="bilingual-label">
-                        Quality SOP Score (1-10) [Model B] / गुणस्तर प्रक्रिया (SOP) स्कोर
-                    </label>
-                    <input type="number" id="quality_sop" min="0" max="10" placeholder="e.g., 7">
-                    <div class="input-hint">1=Poor, 10=Excellent</div>
-                </div>
-
-                <div class="form-group">
-                    <label class="bilingual-label">
-                        Limit Discipline Score (1-10) / ऋण सीमा पालना स्कोर
-                    </label>
-                    <input type="number" id="limit_discipline" min="0" max="10" required placeholder="e.g., 8">
-                </div>
+                <!-- Note: Quality SOP Score moved to Section 2 -->
+                <!-- Note: Limit Discipline Score removed - will be addressed in Banking Performance section -->
             </div>
         </div>
 
-        <!-- Section 6: Cash & Credit -->
+        <!-- Section 7: Cash & Credit (was 6) -->
         <div class="form-section" id="section_farmers">
             <div class="section-header">
                 <div class="section-title">
                     💵 Cash & Farmer Metrics
-                    <span class="section-badge">Section 6</span>
+                    <span class="section-badge">Section 7</span>
                 </div>
             </div>
 
@@ -1251,7 +1386,7 @@
 
                 <div class="form-group existing-field hidden">
                     <label class="bilingual-label">
-                       Member Max DPD (Days) / सबैभन्दा धेरै ढिला भएको दिन
+                        Max DPD (Days) / सबैभन्दा धेरै ढिला भएको दिन
                     </label>
                     <input type="number" id="max_dpd_days" min="0" placeholder="e.g., 5">
                     <div class="input-hint">Days Past Due</div>
@@ -1259,7 +1394,7 @@
 
                 <div class="form-group existing-field hidden">
                     <label class="bilingual-label">
-                       Member Restructures (Past 3 yrs) / पछिल्ला ३ वर्षमा ऋण पुनःसंरचना संख्या
+                        Restructures (Past 3 yrs) / पछिल्ला ३ वर्षमा ऋण पुनःसंरचना संख्या
                     </label>
                     <input type="number" id="restructures" min="0" placeholder="e.g., 0">
                 </div>
@@ -1310,12 +1445,12 @@
             </div>
         </div>
 
-        <!-- Section 7: Declarations -->
+        <!-- Section 8: Declarations (was 7) -->
         <div class="form-section" id="section_declaration">
             <div class="section-header">
                 <div class="section-title">
                     🛡️ Risk Factor Declarations
-                    <span class="section-badge">Section 7</span>
+                    <span class="section-badge">Section 8</span>
                 </div>
             </div>
 
@@ -1365,12 +1500,12 @@
             </div>
         </div>
 
-        <!-- Section 8: Credit History Extended (Existing Only) -->
+        <!-- Section 9: Credit History Extended (Existing Only) - was 8 -->
         <div class="form-section existing-field hidden" id="section_credit">
             <div class="section-header">
                 <div class="section-title">
                     🏦 Banking Performance (Existing Borrower)
-                    <span class="section-badge">Section 8</span>
+                    <span class="section-badge">Section 9</span>
                 </div>
                 <span style="color: var(--success); font-size: 0.9em;">Only for Existing Customers</span>
             </div>
@@ -1402,6 +1537,8 @@
                         <option value="delay_90">60+ days</option>
                     </select>
                 </div>
+
+                <!-- Note: Limit Discipline will be addressed here in future updates -->
             </div>
         </div>
 
@@ -1479,11 +1616,11 @@
                     <!-- Dynamically populated -->
                 </div>
 
-                <!-- Decision Matrix -->
+                <!-- Decision Matrix - Simplified without credit limits -->
                 <div class="decision-matrix">
                     <div class="decision-title">
                         <span>📋</span>
-                        <span>Decision Matrix / निर्णय म्याट्रिक्स</span>
+                        <span>Risk Assessment Summary / जोखिम मूल्याङ्कन सारांश</span>
                     </div>
                     <div class="decision-grid" id="decision_grid">
                         <!-- Dynamically populated -->
@@ -1514,7 +1651,7 @@
 
                 <!-- Final Recommendation -->
                 <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 25px; margin-top: 30px; border-left: 5px solid var(--primary);">
-                    <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.3em;">Final Recommendation / अन्तिम सिफारिस</h3>
+                    <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.3em;">Assessment Summary / मूल्याङ्कन सारांश</h3>
                     <div id="final_recommendation" style="font-size: 1.1em; line-height: 1.8; color: #1f2937;">
                         <!-- Dynamically populated -->
                     </div>
@@ -1545,7 +1682,7 @@
             <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
                 <h3 style="color: var(--primary); margin-bottom: 10px;">Calculation Methodology / गणना विधि</h3>
                 <p style="color: #4b5563; line-height: 1.6;">
-                    Scores are calculated using weighted indicators across 9 risk categories. Each indicator is normalized to a 0-5 scale, 
+                    Scores are calculated using weighted indicators across 10 risk categories. Each indicator is normalized to a 0-5 scale, 
                     then multiplied by its respective weight. The maximum possible score is 100 points.
                 </p>
             </div>
@@ -1566,7 +1703,7 @@ let state = {
     finalResults: []
 };
 
-// Scoring Weights (from Model sheet)
+// Scoring Weights (updated with buyer concentration risk, removed limit_discipline)
 const weights = {
     dscr: { weight: 5, maxScore: 5, name: 'DSCR', category: 'Cash Flow & Loan Repayment' },
     seasonality: { weight: 5, maxScore: 5, name: 'Seasonality Coverage', category: 'Cash Flow & Loan Repayment' },
@@ -1593,14 +1730,19 @@ const weights = {
     max_dpd: { weight: 2.5, maxScore: 5, name: 'Max DPD (Days)', category: 'Loan Recovery & Member Credit Risk' },
     restructuring: { weight: 2.5, maxScore: 5, name: 'Restructuring Count', category: 'Loan Recovery & Member Credit Risk' },
     
+    // New Buyer Concentration Risk Indicators
+    buyer_concentration: { weight: 4, maxScore: 5, name: 'Buyer Concentration %', category: 'Buyer Concentration Risk' },
+    buyer_quality_score: { weight: 4, maxScore: 5, name: 'Buyer Quality Score', category: 'Buyer Concentration Risk' },
+    buyer_payment_behavior: { weight: 2, maxScore: 5, name: 'Buyer Payment Behavior', category: 'Buyer Concentration Risk' },
+    
     mgmt_exp: { weight: 2.5, maxScore: 5, name: 'Management Experience', category: 'Management & Governance' },
     internal_controls: { weight: 2.5, maxScore: 5, name: 'Internal Controls', category: 'Management & Governance' },
     audit_findings: { weight: 2.5, maxScore: 5, name: 'Audit Findings', category: 'Management & Governance' },
     lending_compliance: { weight: 2.5, maxScore: 5, name: 'Lending Policy Compliance', category: 'Management & Governance' },
     
-    quality_sop: { weight: 4, maxScore: 5, name: 'Quality SOP Score', category: 'Operational Quality' },
-    limit_discipline: { weight: 2, maxScore: 5, name: 'Limit Discipline', category: 'Operational Quality' },
-    bank_sales_pct: { weight: 2, maxScore: 5, name: '% Sales via Bank', category: 'Operational Quality' },
+    // Updated Operational Quality - removed limit_discipline, adjusted weights
+    quality_sop: { weight: 3.5, maxScore: 5, name: 'Quality SOP Score', category: 'Operational Quality' },
+    bank_sales_pct: { weight: 1.5, maxScore: 5, name: '% Sales via Bank', category: 'Operational Quality' },
     
     primary_collateral: { weight: 5, maxScore: 5, name: 'Primary Collateral %', category: 'Collateral & Security' },
     secondary_collateral: { weight: 2, maxScore: 5, name: 'Secondary Collateral %', category: 'Collateral & Security' },
@@ -1619,9 +1761,10 @@ const categoryWeights = {
     'Milk Supply & Operational Stability': 15,
     'Financial Strength': 15,
     'Loan Recovery & Member Credit Risk': 15,
+    'Buyer Concentration Risk': 10,
     'Management & Governance': 10,
-    'Operational Quality': 8,
-    'Collateral & Security': 7,
+    'Operational Quality': 5,
+    'Collateral & Security': 5,
     'Risk Factors': 5,
     'Credit History': 5
 };
@@ -1665,10 +1808,16 @@ function updateFormVisibility() {
     document.querySelectorAll('.model-b-field').forEach(el => {
         if (state.coopType === 'processing') {
             el.classList.remove('hidden');
-            if (el.querySelector('input')) el.querySelector('input').required = true;
+            if (el.querySelector('input, select')) {
+                const input = el.querySelector('input, select');
+                input.required = true;
+            }
         } else {
             el.classList.add('hidden');
-            if (el.querySelector('input')) el.querySelector('input').required = false;
+            if (el.querySelector('input, select')) {
+                const input = el.querySelector('input, select');
+                input.required = false;
+            }
         }
     });
     
@@ -1708,7 +1857,6 @@ function showResultTab(tabName) {
     }
 }
 
-// [Previous calculation functions remain the same...]
 function calculateDSCR(ebitda, principal, interest) {
     const totalDebtService = principal + interest;
     return totalDebtService > 0 ? ebitda / totalDebtService : 0;
@@ -1721,6 +1869,65 @@ function getDSCRScore(dscr) {
     if (dscr >= 1.25) return 2;
     if (dscr >= 1.0) return 1;
     return 0;
+}
+
+// Calculate Buyer Concentration Risk Score
+function calculateBuyerConcentrationRisk(inputs) {
+    const scores = {};
+    const calculations = {};
+    
+    // 1. Buyer Concentration % (Top 3 buyers / Total sales)
+    calculations.buyer_concentration = inputs.totalSales > 0 ? 
+        (inputs.buyerTop3Sales / inputs.totalSales) * 100 : 0;
+    
+    // Score: Lower concentration is better
+    if (calculations.buyer_concentration <= 30) scores.buyer_concentration = 5;
+    else if (calculations.buyer_concentration <= 45) scores.buyer_concentration = 4;
+    else if (calculations.buyer_concentration <= 60) scores.buyer_concentration = 3;
+    else if (calculations.buyer_concentration <= 75) scores.buyer_concentration = 2;
+    else scores.buyer_concentration = 1;
+    
+    // 2. Buyer Quality Score (based on buyer mix)
+    // Government buyers = 5 points each, Large private = 4 points, Small/uncertain = 1 point
+    const govtBuyers = inputs.buyerGovtCount || 0;
+    const largePrivate = inputs.buyerLargePrivate || 0;
+    const smallUncertain = inputs.buyerSmallUncertain || 0;
+    const totalBuyers = inputs.buyerTotalCount || 1;
+    
+    const weightedScore = (govtBuyers * 5 + largePrivate * 4 + smallUncertain * 1);
+    const maxPossible = totalBuyers * 5;
+    calculations.buyer_quality_raw = (weightedScore / maxPossible) * 100;
+    
+    if (calculations.buyer_quality_raw >= 80) scores.buyer_quality_score = 5;
+    else if (calculations.buyer_quality_raw >= 65) scores.buyer_quality_score = 4;
+    else if (calculations.buyer_quality_raw >= 50) scores.buyer_quality_score = 3;
+    else if (calculations.buyer_quality_raw >= 35) scores.buyer_quality_score = 2;
+    else scores.buyer_quality_score = 1;
+    
+    // 3. Buyer Payment Behavior
+    const paymentDays = inputs.buyerPaymentDays || 0;
+    const defaultHistory = inputs.buyerDefaultHistory || 'none';
+    
+    // Base score on payment days
+    let paymentScore = 5;
+    if (paymentDays <= 15) paymentScore = 5;
+    else if (paymentDays <= 30) paymentScore = 4;
+    else if (paymentDays <= 45) paymentScore = 3;
+    else if (paymentDays <= 60) paymentScore = 2;
+    else paymentScore = 1;
+    
+    // Adjust based on default history
+    const defaultPenalty = {
+        'none': 0,
+        'minor': -0.5,
+        'moderate': -1.5,
+        'severe': -3
+    };
+    
+    calculations.buyer_payment_score = Math.max(0, paymentScore + (defaultPenalty[defaultHistory] || 0));
+    scores.buyer_payment_behavior = Math.round(calculations.buyer_payment_score);
+    
+    return { scores, calculations };
 }
 
 function calculateScores() {
@@ -1771,14 +1978,25 @@ function calculateScores() {
         bankSales: parseFloat(document.getElementById('sales_bank').value) || 0,
         totalSales: parseFloat(document.getElementById('sales_total').value) || 0,
         
+        // Buyer concentration inputs
+        buyerTotalCount: parseInt(document.getElementById('buyer_total_count').value) || 1,
+        buyerTop3Sales: parseFloat(document.getElementById('buyer_top3_sales').value) || 0,
+        buyerSingleMax: parseFloat(document.getElementById('buyer_single_max').value) || 0,
+        buyerGovtCount: parseInt(document.getElementById('buyer_govt_count').value) || 0,
+        buyerLargePrivate: parseInt(document.getElementById('buyer_large_private').value) || 0,
+        buyerSmallUncertain: parseInt(document.getElementById('buyer_small_uncertain').value) || 0,
+        buyerPaymentDays: parseInt(document.getElementById('buyer_payment_days').value) || 0,
+        buyerDefaultHistory: document.getElementById('buyer_default_history').value,
+        buyerContractCoverage: parseFloat(document.getElementById('buyer_contract_coverage').value) || 0,
+        
         mgmtExp: parseInt(document.getElementById('mgmt_experience').value) || 0,
         internalControls: document.getElementById('internal_controls').value,
         auditFindings: document.getElementById('audit_findings').value,
         lendingCompliance: document.getElementById('lending_compliance').value,
         fleet: document.getElementById('fleet_available').value,
         storage: document.getElementById('storage_available').value,
-        qualitySop: parseInt(document.getElementById('quality_sop')?.value) || 0,
-        limitDiscipline: parseInt(document.getElementById('limit_discipline').value) || 0,
+        // Updated qualitySop to string value from select
+        qualitySop: document.getElementById('quality_sop')?.value || '',
         
         maxDpd: parseInt(document.getElementById('max_dpd_days')?.value) || 0,
         restructures: parseInt(document.getElementById('restructures')?.value) || 0,
@@ -1924,6 +2142,11 @@ function calculateScores() {
     scores.restructuring = inputs.restructures === 0 ? 5 :
                           inputs.restructures === 1 ? 3 : 0;
     
+    // Calculate Buyer Concentration Risk
+    const buyerRisk = calculateBuyerConcentrationRisk(inputs);
+    Object.assign(scores, buyerRisk.scores);
+    Object.assign(calculations, buyerRisk.calculations);
+    
     scores.mgmt_exp = inputs.mgmtExp >= 10 ? 5 :
                      inputs.mgmtExp >= 8 ? 4 :
                      inputs.mgmtExp >= 5 ? 3 :
@@ -1939,19 +2162,19 @@ function calculateScores() {
     scores.lending_compliance = inputs.lendingCompliance === 'yes' ? 5 :
                                inputs.lendingCompliance === 'partial' ? 3 : 0;
     
+    // Updated Quality SOP scoring with categorical values
     if (state.coopType === 'processing') {
-        scores.quality_sop = inputs.qualitySop >= 8 ? 5 :
-                            inputs.qualitySop >= 6 ? 4 :
-                            inputs.qualitySop >= 4 ? 3 :
-                            inputs.qualitySop >= 2 ? 2 : 1;
+        const sopMapping = {
+            'consistent': 5,
+            'few_gaps': 3,
+            'large_gaps': 1
+        };
+        scores.quality_sop = sopMapping[inputs.qualitySop] || 0;
     } else {
         scores.quality_sop = 0;
     }
     
-    scores.limit_discipline = inputs.limitDiscipline >= 8 ? 5 :
-                             inputs.limitDiscipline >= 6 ? 4 :
-                             inputs.limitDiscipline >= 4 ? 3 :
-                             inputs.limitDiscipline >= 2 ? 2 : 1;
+    // Note: limit_discipline removed - will be addressed in Banking Performance section
     
     calculations.bank_sales_pct = inputs.totalSales > 0 ? (inputs.bankSales / inputs.totalSales) * 100 : 0;
     scores.bank_sales_pct = calculations.bank_sales_pct >= 90 ? 5 :
@@ -2064,7 +2287,10 @@ function getUnit(key) {
         recovery_rate: '%',
         primary_collateral: '%',
         secondary_collateral: '%',
-        bank_sales_pct: '%'
+        bank_sales_pct: '%',
+        buyer_concentration: '%',
+        buyer_quality_score: 'score',
+        buyer_payment_behavior: 'score'
     };
     return units[key] || '';
 }
@@ -2128,6 +2354,7 @@ function generateSynopsis(totalScore, results) {
         'Milk Supply & Operational Stability': 'Consistency of milk collection, operational continuity, and supply chain efficiency',
         'Financial Strength': 'Balance sheet health, liquidity position, and capital adequacy',
         'Loan Recovery & Member Credit Risk': 'Effectiveness of internal lending operations and recovery mechanisms',
+        'Buyer Concentration Risk': 'Diversification and reliability of dairy buyers, payment behavior, and contract coverage',
         'Management & Governance': 'Quality of leadership, internal controls, and compliance culture',
         'Operational Quality': 'Adherence to SOPs, quality standards, and financial transparency',
         'Collateral & Security': 'Asset coverage and security strength for the proposed facility',
@@ -2178,17 +2405,17 @@ function generateSynopsis(totalScore, results) {
         analysisContainer.appendChild(card);
     }
     
-    // Decision Matrix
+    // Decision Matrix - Simplified without credit limits
     const decisionGrid = document.getElementById('decision_grid');
     decisionGrid.innerHTML = '';
     
     const decisions = [
-        { label: 'Recommended Action', value: getRecommendation(totalScore, 'action') },
-        { label: 'Risk Level', value: rating },
-        { label: 'Loan Tenor', value: totalScore >= 75 ? 'Long Term (5-7 years)' : totalScore >= 60 ? 'Medium Term (3-5 years)' : 'Short Term (1-2 years)' },
-        { label: 'Collateral Requirement', value: totalScore >= 75 ? 'Standard (100-125%)' : totalScore >= 60 ? 'Enhanced (125-150%)' : 'Strict (>150%)' },
-        { label: 'Review Frequency', value: totalScore >= 75 ? 'Annual' : totalScore >= 60 ? 'Semi-Annual' : 'Quarterly' },
-        { label: 'Interest Rate Spread', value: totalScore >= 75 ? 'Base Rate + 1-2%' : totalScore >= 60 ? 'Base Rate + 2-3%' : 'Base Rate + 3-5%' }
+        { label: 'Risk Assessment', value: rating },
+        { label: 'Overall Score', value: totalScore.toFixed(2) + '/100' },
+        { label: 'Primary Risk Category', value: getPrimaryRiskCategory() },
+        { label: 'Recommended Action', value: getRecommendationAction(totalScore) },
+        { label: 'Monitoring Level', value: totalScore >= 75 ? 'Standard' : totalScore >= 60 ? 'Enhanced' : 'Intensive' },
+        { label: 'Review Frequency', value: totalScore >= 75 ? 'Annual' : totalScore >= 60 ? 'Semi-Annual' : 'Quarterly' }
     ];
     
     decisions.forEach(d => {
@@ -2215,9 +2442,9 @@ function generateSynopsis(totalScore, results) {
     // Analyze results for strengths/weaknesses
     results.forEach(r => {
         const pct = (r.rawScore / r.maxScore) * 100;
-        if (pct >= 80 && r.weight >= 3) {
+        if (pct >= 80 && r.weight >= 2) {
             strengths.push(`${r.name}: Strong performance (${r.rawScore}/${r.maxScore})`);
-        } else if (pct <= 40 && r.weight >= 3) {
+        } else if (pct <= 40 && r.weight >= 2) {
             weaknesses.push(`${r.name}: Requires immediate attention (${r.rawScore}/${r.maxScore})`);
         }
     });
@@ -2250,38 +2477,54 @@ function generateSynopsis(totalScore, results) {
     
     // Final Recommendation
     const recEl = document.getElementById('final_recommendation');
-    recEl.innerHTML = getRecommendation(totalScore, 'detailed');
+    recEl.innerHTML = getAssessmentSummary(totalScore);
     
     // Draw charts after a short delay to ensure canvas is visible
     setTimeout(drawCharts, 100);
 }
 
-function getRecommendation(score, type) {
-    if (type === 'action') {
-        if (score >= 75) return 'Approve - Standard Terms';
-        if (score >= 60) return 'Approve - With Conditions';
-        if (score >= 45) return 'Refer to Credit Committee';
-        return 'Decline / Restructure Required';
+function getPrimaryRiskCategory() {
+    let lowestScore = 100;
+    let primaryRisk = 'None';
+    
+    for (const [cat, data] of Object.entries(state.categoryScores)) {
+        if (data.max === 0) continue;
+        const pct = (data.score / data.weight) * 100;
+        if (pct < lowestScore) {
+            lowestScore = pct;
+            primaryRisk = cat;
+        }
     }
     
+    return primaryRisk;
+}
+
+function getRecommendationAction(score) {
+    if (score >= 75) return 'Standard Approval';
+    if (score >= 60) return 'Approve with Monitoring';
+    if (score >= 45) return 'Conditional Approval';
+    return 'Decline / Restructure';
+}
+
+function getAssessmentSummary(score) {
     if (score >= 75) {
-        return `<strong>Strong Approval Recommended:</strong> This cooperative demonstrates exceptional creditworthiness across all key metrics. 
-                The strong DSCR, stable milk supply, robust governance, and healthy financial ratios indicate capacity to service debt obligations comfortably. 
-                <br><br><strong>Key Positive Indicators:</strong> Low leverage, high recovery rates, experienced management, and strong collateral coverage. 
-                Recommend approval with standard terms and annual review cycle.`;
+        return `<strong>Strong Credit Profile:</strong> This cooperative demonstrates exceptional creditworthiness across all key metrics. 
+                The strong DSCR, stable milk supply, robust governance, healthy financial ratios, and diversified buyer base indicate capacity to service debt obligations comfortably. 
+                <br><br><strong>Key Positive Indicators:</strong> Low leverage, high recovery rates, experienced management, strong collateral coverage, and reliable buyer relationships. 
+                <br><br><strong>Assessment:</strong> Credit risk is low. Standard monitoring protocols recommended.`;
     } else if (score >= 60) {
-        return `<strong>Approval Recommended with Monitoring:</strong> The cooperative meets minimum credit standards with adequate buffers. 
-                While financial performance is satisfactory, identified gaps in <span id="gap_areas">operational efficiency and risk management</span> require attention. 
-                <br><br><strong>Conditions:</strong> Quarterly financial reporting, maintenance of minimum liquidity thresholds, and semi-annual site visits recommended. 
-                Consider shorter initial tenor with renewal option upon satisfactory performance.`;
+        return `<strong>Acceptable Credit Profile:</strong> The cooperative meets minimum credit standards with adequate buffers. 
+                While financial performance is satisfactory, identified gaps in operational efficiency, buyer diversification, or risk management require attention. 
+                <br><br><strong>Considerations:</strong> Quarterly financial reporting, maintenance of minimum liquidity thresholds, and semi-annual reviews recommended. 
+                <br><br><strong>Assessment:</strong> Credit risk is moderate. Enhanced monitoring recommended to ensure continued performance.`;
     } else if (score >= 45) {
-        return `<strong>Conditional Approval / Enhanced Monitoring Required:</strong> Credit application shows moderate risk profile with specific vulnerabilities in cash flow stability and/or governance structures. 
-                <br><br><strong>Mitigation Required:</strong> Enhanced collateral (minimum 150%), personal/corporate guarantees, monthly monitoring, and strict covenant compliance. 
-                Recommend Credit Committee review and potential phased disbursement linked to milestones.`;
+        return `<strong>Moderate Risk Profile:</strong> Credit application shows moderate risk profile with specific vulnerabilities in cash flow stability, governance structures, or buyer concentration. 
+                <br><br><strong>Mitigation Required:</strong> Enhanced due diligence required. Consider additional security, guarantees, and strict covenant compliance. 
+                <br><br><strong>Assessment:</strong> Credit risk is elevated. Intensive monitoring and conditional approval recommended pending risk mitigation measures.`;
     } else {
-        return `<strong>Decline or Restructure Recommended:</strong> Significant credit risks identified including inadequate debt service capacity, high leverage, poor governance, or weak repayment track record. 
-                <br><br><strong>Action Required:</strong> If existing borrower, immediate restructuring recommended. If new applicant, decline current proposal and provide specific improvement plan. 
-                Reconsider upon demonstration of 12-month sustained improvement in identified weak areas.`;
+        return `<strong>High Risk Profile:</strong> Significant credit risks identified including inadequate debt service capacity, high leverage, poor governance, weak repayment track record, or excessive buyer concentration. 
+                <br><br><strong>Action Required:</strong> Immediate attention to risk factors required. If existing borrower, restructuring may be necessary. If new applicant, specific improvement plan should be provided. 
+                <br><br><strong>Assessment:</strong> Credit risk is high. Decline or substantial restructuring recommended pending demonstration of sustained improvement in identified weak areas.`;
     }
 }
 
@@ -2468,9 +2711,11 @@ function displayResults(total, maxPossible, results) {
         { name: 'Milk Supply & Operational Stability (15%)', keys: ['milk_stability', 'days_stability', 'milk_loss', 'yield_loss', 'farmer_concentration', 'collection_stability', 'payment_fairness', 'logistics'] },
         { name: 'Financial Strength (15%)', keys: ['net_worth', 'debt_equity', 'current_ratio', 'grant_dependence', 'cash_trend'] },
         { name: 'Loan Recovery & Member Credit Risk (15%)', keys: ['member_gnpa', 'recovery_rate', 'max_dpd', 'restructuring'] },
+        { name: 'Buyer Concentration Risk (10%)', keys: ['buyer_concentration', 'buyer_quality_score', 'buyer_payment_behavior'] },
         { name: 'Management & Governance (10%)', keys: ['mgmt_exp', 'internal_controls', 'audit_findings', 'lending_compliance'] },
-        { name: 'Operational Quality (8%)', keys: ['quality_sop', 'limit_discipline', 'bank_sales_pct'] },
-        { name: 'Collateral & Security (7%)', keys: ['primary_collateral', 'secondary_collateral'] },
+        // Updated Operational Quality - removed limit_discipline
+        { name: 'Operational Quality (5%)', keys: ['quality_sop', 'bank_sales_pct'] },
+        { name: 'Collateral & Security (5%)', keys: ['primary_collateral', 'secondary_collateral'] },
         { name: 'Risk Factors (5%)', keys: ['insurance', 'digital_mis', 'regulatory', 'climate_risk'] }
     ];
     
@@ -2531,7 +2776,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
-
-
-
