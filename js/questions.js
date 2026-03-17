@@ -2,6 +2,14 @@
  * questions.js — Complete Static Questionnaire Definition
  * All 15 sections, 120+ questions for Dairy Cooperative Credit Scoring Portal
  * No network request needed — runs fully offline.
+ *
+ * CHANGES:
+ *   - climatic_risk_score: changed from number input → select dropdown
+ *     (options map to scoring thresholds: ≤3→20pts, ≤6→12pts, >6→5pts)
+ *   - internal_control_score: changed from number input → select dropdown
+ *     (options map to scoring thresholds: ≥80→20pts, ≥60→14pts, ≥40→8pts, <40→4pts)
+ *   - quality_sop_score: changed from number input → select dropdown
+ *     (options map to scoring thresholds: ≥80→10pts, ≥60→6pts, ≥40→3pts, <40→0pts)
  */
 
 const QUESTIONNAIRE = {
@@ -190,7 +198,7 @@ const QUESTIONNAIRE = {
             subtitle: 'Financial Strength — net worth threshold check',
             questions: [
                 { id: 'paid_up_capital',    type: 'number', labelEng: 'Paid-Up Capital, NPR',     labelNep: 'चुक्ता पूँजी',                     min: 0, oninput: 'calculateNetWorth()' },
-                { id: 'retained_earnings',  type: 'number', labelEng: 'Retained Earnings, NPR',   labelNep: 'संचित नाफा',                       min: 0, oninput: 'calculateNetWorth()' },
+                { id: 'retained_earnings',  type: 'number', labelEng: 'Retained Earnings, NPR',   labelNep: 'संचित नाफा',                       oninput: 'calculateNetWorth()' },
                 { id: 'reserve_fund',       type: 'number', labelEng: 'Reserve Fund, NPR',        labelNep: 'कोष/रिजर्भ',                       min: 0, oninput: 'calculateNetWorth()' },
                 { id: 'total_net_worth',    type: 'number', labelEng: 'Total Net Worth (Auto)',   labelNep: 'कुल निवल सम्पत्ति',               readonly: true, hint: 'Auto-calculated' }
             ]
@@ -221,7 +229,7 @@ const QUESTIONNAIRE = {
             id: 'section_11',
             title: 'Logistics & Infrastructure',
             icon: 'truck',
-            subtitle: 'Supply scoring — vehicle availability & cold chain',
+            subtitle: 'Supply scoring — vehicle availability, cold chain & risk',
             questions: [
                 { id: 'vehicle_avail_pct',     type: 'number', labelEng: 'Vehicle Availability %, Annual',       labelNep: 'सवारी उपलब्धता % वार्षिक',        min: 0, max: 100, placeholder: 'e.g., 85' },
                 { id: 'storage_cold_facility', type: 'select', labelEng: 'Cold Storage / Chilling Facility?',    labelNep: 'चिसो भण्डारण सुविधा छ?',
@@ -239,7 +247,37 @@ const QUESTIONNAIRE = {
                         { value: 'No',       label: 'No — छैन' }
                     ]
                 },
-                { id: 'quality_sop_score',     type: 'number', labelEng: 'Quality SOP Score (0–100)',             labelNep: 'गुणस्तर SOP अंक (0-100)',          min: 0, max: 100, placeholder: 'e.g., 72' }
+                // CHANGED: quality_sop_score → dropdown (was number 0–100)
+                // Scoring: ≥80→10pts | ≥60→6pts | ≥40→3pts | <40→0pts
+                {
+                    id: 'quality_sop_score',
+                    type: 'select',
+                    labelEng: 'Quality SOP / Compliance Level',
+                    labelNep: 'गुणस्तर SOP / अनुपालन स्तर',
+                    hint: 'Strong ≥80 = 10 pts | Good ≥60 = 6 pts | Basic ≥40 = 3 pts | None <40 = 0 pts',
+                    options: [
+                        { value: '',   label: 'Select' },
+                        { value: '85', label: 'Strong — उच्च (85/100) · 10 pts' },
+                        { value: '65', label: 'Good — राम्रो (65/100) · 6 pts' },
+                        { value: '45', label: 'Basic — आधारभूत (45/100) · 3 pts' },
+                        { value: '15', label: 'None / Very Poor — छैन (15/100) · 0 pts' }
+                    ]
+                },
+                // CHANGED: climatic_risk_score → dropdown (was number 1–10)
+                // Scoring: ≤3→20pts | ≤6→12pts | >6→5pts
+                {
+                    id: 'climatic_risk_score',
+                    type: 'select',
+                    labelEng: 'Climatic / Natural Disaster Risk Level',
+                    labelNep: 'जलवायु / प्राकृतिक प्रकोप जोखिम स्तर',
+                    hint: 'Low risk = 20 pts | Medium risk = 12 pts | High risk = 5 pts',
+                    options: [
+                        { value: '',  label: 'Select' },
+                        { value: '2', label: 'Low — न्यून जोखिम (Score 2/10) · 20 pts' },
+                        { value: '5', label: 'Medium — मध्यम जोखिम (Score 5/10) · 12 pts' },
+                        { value: '8', label: 'High — उच्च जोखिम (Score 8/10) · 5 pts' }
+                    ]
+                }
             ]
         },
 
@@ -272,7 +310,22 @@ const QUESTIONNAIRE = {
             subtitle: 'Governance: 80 pts — experience, controls, compliance',
             questions: [
                 { id: 'mgmt_experience',         type: 'number', labelEng: 'Management Experience, Years',          labelNep: 'व्यवस्थापकीय अनुभव वर्ष',             min: 0, placeholder: 'e.g., 8' },
-                { id: 'internal_control_score',  type: 'number', labelEng: 'Internal Control Score (0–100)',         labelNep: 'आन्तरिक नियन्त्रण अंक (0-100)',       min: 0, max: 100, placeholder: 'e.g., 70' },
+                // CHANGED: internal_control_score → dropdown (was number 0–100)
+                // Scoring: ≥80→20pts | ≥60→14pts | ≥40→8pts | <40→4pts
+                {
+                    id: 'internal_control_score',
+                    type: 'select',
+                    labelEng: 'Internal Control Strength',
+                    labelNep: 'आन्तरिक नियन्त्रण बलियोपन',
+                    hint: 'Strong ≥80 = 20 pts | Adequate ≥60 = 14 pts | Weak ≥40 = 8 pts | Very Weak <40 = 4 pts',
+                    options: [
+                        { value: '',   label: 'Select' },
+                        { value: '85', label: 'Strong — बलियो (85/100) · 20 pts' },
+                        { value: '65', label: 'Adequate — पर्याप्त (65/100) · 14 pts' },
+                        { value: '45', label: 'Weak — कमजोर (45/100) · 8 pts' },
+                        { value: '20', label: 'Very Weak — धेरै कमजोर (20/100) · 4 pts' }
+                    ]
+                },
                 { id: 'loan_policy_compliance',  type: 'select', labelEng: 'Loan Policy Compliance?',               labelNep: 'ऋण नीति पालना भयो?',
                     options: [
                         { value: '',    label: 'Select' },
@@ -314,7 +367,6 @@ const QUESTIONNAIRE = {
                         { value: 'No',       label: 'No — छैन' }
                     ]
                 },
-                { id: 'climatic_risk_score',    type: 'number', labelEng: 'Climatic Risk Score (1–10)',              labelNep: 'जलवायु जोखिम अंक (1-10)',             min: 1, max: 10, placeholder: 'e.g., 4' },
                 { id: 'credit_history_bfi',     type: 'select', labelEng: 'BFI Credit Classification',              labelNep: 'बैंक/वित्त संस्थाको कर्जा वर्गीकरण',
                     options: [
                         { value: '',             label: 'Select' },
@@ -334,7 +386,7 @@ const QUESTIONNAIRE = {
             id: 'section_15',
             title: 'Behavioral & Community',
             icon: 'heart',
-            subtitle: 'Behavioral/Social: 30 pts — community, emergency planning',
+            subtitle: 'Behavioral/Social: 75 pts — community, emergency planning',
             questions: [
                 { id: 'community_support_level', type: 'select', labelEng: 'Community Support Level',              labelNep: 'सामुदायिक सहयोगको स्तर',
                     options: [
