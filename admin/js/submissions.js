@@ -1,10 +1,11 @@
 /**
  * admin/js/submissions.js
- * Manages the submissions list view.
  *
- * FIX: mapSubmissionFromGAS now maps exact column names produced by Code.gs:
- *   'Submission Timestamp' | 'Server Timestamp' | 'Total Score' | 'Risk Tier' |
- *   'Coop Name' | 'Answers JSON' | 'Approver Status' | 'Approver Notes' | 'Approver Decided At'
+ * KEY FIX: mapSubmissionFromGAS now calls runScoringEngine(answers) to rebuild
+ * the full result object (categories, strengths, weaknesses, focus, metrics)
+ * from the saved Answers JSON — these are never stored in the sheet.
+ *
+ * Requires admin/js/engine.js to be loaded before this file.
  */
 
 window._adminSubmissions = [];
@@ -18,7 +19,6 @@ async function fetchSubmissions() {
         return [];
     }
 
-    // Show loading indicator in submissions table
     const tbody = document.getElementById('sub_table_body');
     if (tbody) {
         tbody.innerHTML = `
@@ -26,7 +26,7 @@ async function fetchSubmissions() {
                 <td colspan="8" style="text-align:center;padding:40px;">
                     <div style="display:inline-flex;align-items:center;gap:10px;color:var(--ink-5);font-size:13px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                             fill="none" stroke="var(--brand,#2563eb)" stroke-width="2"
+                             fill="none" stroke="var(--info,#2563eb)" stroke-width="2"
                              style="animation:spin 1s linear infinite;flex-shrink:0">
                           <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
                         </svg>
@@ -34,7 +34,6 @@ async function fetchSubmissions() {
                     </div>
                 </td>
             </tr>`;
-        // Inject spin keyframe once
         if (!document.getElementById('_spin_style')) {
             const s = document.createElement('style');
             s.id = '_spin_style';
@@ -48,36 +47,26 @@ async function fetchSubmissions() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
 
         const data = await res.json();
+        console.log('[fetchSubmissions] server response:', data);
 
-        // Log the raw response so you can diagnose GAS deployment issues
-        // console.log('[fetchSubmissions] server response:', data);
-
-        // GAS may return { error: '...' } on failure
         if (data && data.error) throw new Error('GAS error: ' + data.error);
 
-        // If GAS still returns the debug object (old deployment), detect it clearly
         if (data && data.spreadsheetName !== undefined) {
             throw new Error(
                 'GAS is still running the OLD deployment. ' +
-                'In Apps Script: click Deploy → Manage deployments → edit the active deployment → ' +
-                'set "Version" to "New version" → Deploy. Then hard-refresh this page.'
+                'In Apps Script → Deploy → Manage deployments → edit → Version = "New version" → Deploy.'
             );
         }
 
-        // data should be an array of row objects
         if (!Array.isArray(data)) {
-            throw new Error(
-                'Unexpected response format from server. Got: ' +
-                JSON.stringify(data).slice(0, 200)
-            );
+            throw new Error('Unexpected response format. Got: ' + JSON.stringify(data).slice(0, 200));
         }
 
         window._adminSubmissions = data.map(mapSubmissionFromGAS);
 
-        // Refresh dashboard stats if already rendered
         if (typeof loadDashboard === 'function') loadDashboard();
-
         return window._adminSubmissions;
+
     } catch (err) {
         console.error('fetchSubmissions error:', err);
         if (typeof showAdminToast === 'function') {
@@ -98,16 +87,12 @@ async function fetchSubmissions() {
     }
 }
 
-// ── Map GAS row → submission object ─────────────────────────────────────────
-/**
- * FIX: Uses exact column names from Code.gs submitAnswers():
- *   'Submission Timestamp', 'Server Timestamp', 'Total Score', 'Risk Tier',
- *   'Coop Name', 'Answers JSON', 'Approver Status', 'Approver Notes', 'Approver Decided At'
- */
+// ── Map GAS row → submission object ──────────────────────────────────────────
+
 function mapSubmissionFromGAS(raw) {
-    // Parse Answers JSON safely
+    // Parse Answers JSON
     const answersStr = raw['Answers JSON'] || '{}';
-    const answers = (function() {
+    const answers = (function () {
         try {
             if (typeof answersStr === 'string' && answersStr.trim().startsWith('{')) {
                 return JSON.parse(answersStr);
@@ -116,36 +101,55 @@ function mapSubmissionFromGAS(raw) {
         return {};
     })();
 
-    // Build a stable synthetic ID from timestamp + coop name
+    // Stable synthetic ID from timestamp + coop name
     const tsRaw   = raw['Submission Timestamp'] || raw['Server Timestamp'] || '';
     const coopRaw = raw['Coop Name'] || answers.coop_name || '';
     const syntheticId = (String(tsRaw) + String(coopRaw))
-        .replace(/[^a-z0-9]/gi, '')
-        .toLowerCase()
+        .replace(/[^a-z0-9]/gi, '').toLowerCase()
         || ('sub_' + Math.random().toString(36).slice(2));
 
-    // Approver status — normalise to lowercase, default to 'pending'
+    // Approver status
     let approverStatus = String(raw['Approver Status'] || '').trim().toLowerCase();
-    if (!approverStatus || approverStatus === '') approverStatus = 'pending';
+    if (!approverStatus) approverStatus = 'pending';
 
-    // Score — ensure it's a number
+    // Score from sheet
     const score = raw['Total Score'] !== '' && raw['Total Score'] != null
-        ? Number(raw['Total Score'])
-        : 0;
+        ? Number(raw['Total Score']) : 0;
+
+    // ── RE-RUN SCORING ENGINE from saved answers ──────────────────────────────
+    // Rebuilds: categories, strengths, weaknesses, focus, metrics, data
+    // These are computed client-side and never saved to the sheet.
+    let result = {};
+    if (typeof runScoringEngine === 'function' && answers && Object.keys(answers).length > 0) {
+        try {
+            result = runScoringEngine(answers);
+        } catch (e) {
+            console.warn('[mapSubmissionFromGAS] Engine error for "' + coopRaw + '":', e.message);
+        }
+    } else if (typeof runScoringEngine !== 'function') {
+        console.error('[mapSubmissionFromGAS] runScoringEngine not found — is engine.js loaded before submissions.js in admin.html?');
+    }
+
+    // Determine modelType from answers
+    const modelType = (function () {
+        const mt = String(answers.model_type || '').toLowerCase();
+        if (mt.includes('processing') || mt.includes('model b')) return 'processing';
+        return 'collection';
+    })();
 
     return {
         id:                syntheticId,
-        coopName:          raw['Coop Name']          || answers.coop_name || 'Unknown',
+        coopName:          raw['Coop Name']            || answers.coop_name || 'Unknown',
         submittedAt:       raw['Submission Timestamp'] || raw['Server Timestamp'] || new Date().toISOString(),
-        score:             isNaN(score) ? 0 : score,
-        riskTier:          raw['Risk Tier']           || '—',
+        score:             isNaN(score) ? (result.totalScore || 0) : score,
+        riskTier:          raw['Risk Tier']            || result.riskCategory || '—',
         approverStatus:    approverStatus,
-        approverNotes:     raw['Approver Notes']      || '',
-        approverDecidedAt: raw['Approver Decided At'] || null,
-        modelType:         answers.modelType          || 'collection',
-        customerType:      answers.customerType       || 'new',
+        approverNotes:     raw['Approver Notes']       || '',
+        approverDecidedAt: raw['Approver Decided At']  || null,
+        modelType:         modelType,
+        customerType:      answers.customer_type       || 'new',
         answers:           answers,
-        result:            {},   // result is computed client-side; not stored in sheet
+        result:            result,   // ← now fully populated with categories etc.
         _raw:              raw
     };
 }
@@ -167,7 +171,7 @@ function renderSubmissionsTable(filter, riskFilter) {
     const count = document.getElementById('sub_count_badge');
     if (!tbody) return;
 
-    let rows = all.slice().reverse(); // newest first
+    let rows = all.slice().reverse();
 
     if (filter.trim()) {
         const q = filter.toLowerCase();
@@ -185,20 +189,18 @@ function renderSubmissionsTable(filter, riskFilter) {
 
     if (!rows.length) {
         tbody.innerHTML = `
-            <tr>
-                <td colspan="8">
-                    <div class="empty-state">
-                        <div class="empty-state-icon"><i data-lucide="inbox"></i></div>
-                        <h3>${all.length ? 'No results match your filters' : 'No submissions yet'}</h3>
-                        <p>${all.length ? 'Try clearing the search or filter.' : 'Complete the questionnaire in the user portal.'}</p>
-                    </div>
-                </td>
-            </tr>`;
+            <tr><td colspan="8">
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i data-lucide="inbox"></i></div>
+                    <h3>${all.length ? 'No results match your filters' : 'No submissions yet'}</h3>
+                    <p>${all.length ? 'Try clearing the search or filter.' : 'Complete the questionnaire in the user portal.'}</p>
+                </div>
+            </td></tr>`;
         if (window.lucide) lucide.createIcons();
         return;
     }
 
-    tbody.innerHTML = rows.map(function(sub) {
+    tbody.innerHTML = rows.map(function (sub) {
         const tier       = getRiskTierClass(sub.riskTier || '');
         const status     = sub.approverStatus || 'pending';
         const date       = sub.submittedAt
@@ -207,7 +209,7 @@ function renderSubmissionsTable(filter, riskFilter) {
         const score      = sub.score != null ? sub.score : '—';
         const scoreColor = getScoreColor(sub.score || 0);
         const shortId    = (sub.id || '').toString().slice(-6);
-        const modelLabel = sub.modelType === 'collection' ? 'Collection' : 'Processing';
+        const modelLabel = sub.modelType === 'processing' ? 'Processing' : 'Collection';
 
         return `
             <tr onclick="openSubmission('${sub.id}')">
@@ -253,29 +255,22 @@ function getScoreColor(score) {
     return '#b91c1c';
 }
 
-function _cap(s) {
-    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-}
-
+function _cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 function _escHtml(s) {
-    return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // ── Open submission ───────────────────────────────────────────────────────────
 
 function openSubmission(id) {
     const all = loadSubmissionsData();
-    const sub = all.find(function(s) {
+    const sub = all.find(function (s) {
         return s.id === id || String(s.id) === String(id);
     });
     if (!sub) {
         if (typeof showAdminToast === 'function') showAdminToast('Submission not found.', 'error');
         return;
     }
-
     window._adminCurrentSubmission = sub;
     navigateAdmin('result');
     renderResultViewer(sub);
@@ -291,10 +286,9 @@ function initSubmissionsView() {
     const riskSelect  = document.getElementById('sub_risk_filter');
 
     if (searchInput) {
-        // Remove old listeners by cloning
         const newSearch = searchInput.cloneNode(true);
         searchInput.parentNode.replaceChild(newSearch, searchInput);
-        newSearch.addEventListener('input', function() {
+        newSearch.addEventListener('input', function () {
             renderSubmissionsTable(newSearch.value, riskSelect ? riskSelect.value : '');
         });
     }
@@ -302,7 +296,7 @@ function initSubmissionsView() {
     if (riskSelect) {
         const newSelect = riskSelect.cloneNode(true);
         riskSelect.parentNode.replaceChild(newSelect, riskSelect);
-        newSelect.addEventListener('change', function() {
+        newSelect.addEventListener('change', function () {
             const search = document.getElementById('sub_search');
             renderSubmissionsTable(search ? search.value : '', newSelect.value);
         });
