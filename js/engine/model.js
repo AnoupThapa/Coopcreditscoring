@@ -210,10 +210,14 @@ function runModel(calc, data) {
         25, 'Avg Years in Management Role', mExp + ' yrs');
 
     // 6b. Internal Controls — 25 pts
-    const ic = calc.internal_controls;  // 'Robust' / 'Adequate' / 'Weak'
+    // 6b. Internal Controls — 25 pts
+    // questions.js stores 'Robust'/'Adequate'/'Weak' (fixed)
+    // Legacy submissions stored '85'/'65'/'20' — keep fallbacks
+    const ic = String(calc.internal_controls || '');
+    const icScore = ic.includes('Robust') || ic === '85' ? 25
+        : ic.includes('Adequate') || ic.includes('Moderate') || ic === '65' ? 10 : 0;
     add(CAT6, 'Internal Controls',
-        ic === 'Robust' ? 25 : ic === 'Adequate' ? 10 : 0,
-        25, 'Internal Control Assessment', ic || 'N/A');
+        icScore, 25, 'Internal Control Assessment', ic || 'N/A');
 
     // 6c. Audit Findings — 25 pts
     // Sheet: "None"→25, "Few"→15, "Qualified"→0

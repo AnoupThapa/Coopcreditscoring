@@ -10,15 +10,14 @@
  *   - applyRestoredConfigUI() is kept as no-op for compatibility
  *
  * Load order (enforced by index.html):
- *   1. js/utils.js
- *   2. js/engine/dataTransform.js
- *   3. js/engine/calculations.js
- *   4. js/engine/model.js
- *   5. js/engine/scoringEngine.js
- *   6. js/questions.js
- *   7. js/ui/loadingModal.js
- *   8. js/ui/formHandler.js
- *   9. script.js
+ *   1. js/engine/scoringEngine.js  (shared utils + auto-calc triggers + orchestrator — MUST BE FIRST)
+ *   2. js/engine/dataTransform.js  (Data Sheet layer)
+ *   3. js/engine/calculations.js   (Calculations Sheet layer)
+ *   4. js/engine/model.js          (Model/scoring layer)
+ *   5. js/questions.js             (questionnaire definition)
+ *   6. js/ui/loadingModal.js       (loading overlay)
+ *   7. js/ui/formHandler.js        (form render + validation)
+ *   8. script.js                   (app controller)
  */
 
 // ── Global State ──────────────────────────────────────────────────────────────
@@ -34,7 +33,7 @@ const state = {
 const VALID_ROUTES = ['config', 'questions'];
 const STORAGE_KEY  = 'coop_portal_config';
 
-const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz9PodwguDEr4EWEMKlN-Lu566k13970kXXQlMp9rwEsgpni7gQz-dALRlnB9q5Fht22g/exec';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbycv21JBDXECmO99KWWYgUJVIIgCWOfYRgqSJzkG3ZwEVqKk96xk-IF9EwIsVcD6KUKlA/exec';
 
 const SCORE_TIERS = [
     { min: 0,   max: 499,  label: 'D Risk', riskClass: 'high-risk',  color: '#b91c1c', bg: '#fee2e2' },
@@ -315,12 +314,34 @@ async function submitToGAS(answers, result) {
 
     showLoading('Submitting data…', 'Saving, Please wait...');
     try {
+        // Send the full result breakdown so the sheet is always the source of truth.
+        // This means the sheet score matches the portal score regardless of formula changes.
         const payload = {
             action:    'submitAnswers',
             answers,
             score:     result.totalScore,
             riskTier:  result.riskCategory,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            // Full breakdown — stored as Result JSON in the sheet.
+            // categories includes 'logs' (per-indicator detail) so the admin
+            // resultViewer can render the sub-indicator breakdown without re-running the engine.
+            resultBreakdown: {
+                totalScore:    result.totalScore,
+                rawTotal:      result.rawTotal,
+                riskCategory:  result.riskCategory,
+                recommendation:result.recommendation,
+                categories:    (result.categories || []).map(c => ({
+                    name:  c.name,
+                    score: c.score,
+                    max:   c.max,
+                    logs:  c.logs || []   // ← indicator-level detail for admin sub-indicator view
+                })),
+                indicators:    result.indicators   || [],  // ← flat indicator list
+                metrics:       result.metrics      || {},
+                strengths:     result.strengths    || [],
+                weaknesses:    result.weaknesses   || [],
+                focus:         result.focus        || []
+            }
         };
         const r = await fetch(GOOGLE_WEB_APP_URL, {
             method:   'POST',

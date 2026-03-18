@@ -244,10 +244,9 @@ function transformData(rawInputs) {
     const climatic_risk_raw = inp['climatic_risk_score'];
     const climatic_risk_str = String(climatic_risk_raw || '').trim();
 
-    // Map quality SOP to numeric
-    const quality_sop_numeric = quality_sop_score_model_b.includes('Standards and documents') ? 9
-        : quality_sop_score_model_b.includes('Standards exist') ? 6
-        : safeNum(quality_sop_score_model_b) || 1.5;
+    // Pass raw dropdown string — runModel() uses .includes() string matching.
+    // Never convert to numeric; that turns the string into 9/6/1.5 which breaks matching.
+    const quality_sop_numeric = quality_sop_score_model_b;
 
     // ── Credit History ────────────────────────────────────────────────────────
     const credit_history_banks = s2('credit_history_banks','credit_history_bfi');

@@ -234,10 +234,9 @@ function transformData(rawInputs) {
     const regulatory_compliance_flag = s('regulatory_compliance_flag');
     const climatic_risk_score        = s('climatic_risk_score');         // 'Low'/'Medium'/'High'
 
-    // Map quality SOP string to numeric score for model scoring
-    const quality_sop_numeric = quality_sop_score_model_b.includes('Standards and documents') ? 9
-        : quality_sop_score_model_b.includes('Standards exist') ? 6
-        : 1.5;
+    // Pass raw dropdown string — model.js uses .includes() string matching.
+    // Never convert to numeric here; that breaks the string match entirely.
+    const quality_sop_numeric = quality_sop_score_model_b;
 
     // ── S.N 111–112: Credit History — BFI ────────────────────────────────────
     const credit_history_banks = s('credit_history_banks');

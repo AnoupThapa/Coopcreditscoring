@@ -321,19 +321,42 @@ function mapSubmissionFromGAS(raw) {
     let approverStatus = String(raw['Approver Status'] || '').trim().toLowerCase();
     if (!approverStatus) approverStatus = 'pending';
 
-    const score = raw['Total Score'] !== '' && raw['Total Score'] != null
-        ? Number(raw['Total Score']) : 0;
+    const sheetScore = raw['Total Score'] !== '' && raw['Total Score'] != null
+        ? Number(raw['Total Score']) : null;
 
+    // ── Result: prefer stored Result JSON (submitted at time of scoring) ─────────
+    // The sheet now stores the full result breakdown in "Result JSON" so the score
+    // in the admin table always matches what the user saw — even if engine formulas change.
+    // Fall back to re-running the engine only for old submissions without Result JSON.
     let result = {};
-    if (typeof runScoringEngine === 'function' && answers && Object.keys(answers).length > 0) {
+
+    const storedResultStr = raw['Result JSON'] || '';
+    if (storedResultStr && typeof storedResultStr === 'string' && storedResultStr.trim().startsWith('{')) {
+        try {
+            result = JSON.parse(storedResultStr);
+        } catch (e) {
+            console.warn('[mapSubmissionFromGAS] Could not parse Result JSON for "' + coopRaw + '" — will re-run engine.');
+        }
+    }
+
+    // Fall back: re-run engine for legacy submissions without stored Result JSON
+    if (!result.totalScore && typeof runScoringEngine === 'function' && answers && Object.keys(answers).length > 0) {
         try {
             result = runScoringEngine(answers);
+            console.info('[mapSubmissionFromGAS] Re-ran engine for "' + coopRaw + '" (no stored Result JSON).');
         } catch (e) {
             console.warn('[mapSubmissionFromGAS] Engine error for "' + coopRaw + '":', e.message);
         }
-    } else if (typeof runScoringEngine !== 'function') {
-        console.error('[mapSubmissionFromGAS] runScoringEngine not found — is engine.js loaded before submissions.js?');
     }
+
+    // Always prefer the freshly re-calculated engine score over the stale sheet value.
+    // The engine may produce a different result if formulas have been updated since submission.
+    // Fall back to sheet score only if the engine failed (result is empty).
+    const engineScore = result.totalScore != null ? result.totalScore : null;
+    const finalScore  = engineScore !== null ? engineScore
+        : (sheetScore !== null && !isNaN(sheetScore) ? sheetScore : 0);
+
+    const finalRiskTier = result.riskCategory || raw['Risk Tier'] || '—';
 
     const modelType = (function () {
         const mt = String(answers.model_type || '').toLowerCase();
@@ -346,8 +369,8 @@ function mapSubmissionFromGAS(raw) {
         submissionId:      sheetId || syntheticId,   // the exact Submission ID from sheet
         coopName:          raw['Coop Name']            || answers.coop_name || 'Unknown',
         submittedAt:       raw['Submission Timestamp'] || raw['Server Timestamp'] || new Date().toISOString(),
-        score:             isNaN(score) ? (result.totalScore || 0) : score,
-        riskTier:          raw['Risk Tier']            || result.riskCategory || '—',
+        score:             finalScore,
+        riskTier:          finalRiskTier,
         approverStatus:    approverStatus,
         approverNotes:     raw['Approver Notes']       || '',
         approverDecidedAt: raw['Approver Decided At']  || null,

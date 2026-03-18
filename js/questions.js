@@ -916,9 +916,9 @@ const QUESTIONNAIRE = {
                     hint: 'Assess the overall strength of internal financial controls',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: '85', label: 'Robust / बलियो' },
-                        { value: '65', label: 'Adequate / पर्याप्त' },
-                        { value: '20', label: 'Weak / कमजोर' }
+                        { value: 'Robust', label: 'Robust / बलियो' },
+                        { value: 'Adequate', label: 'Adequate / पर्याप्त' },
+                        { value: 'Weak', label: 'Weak / कमजोर' }
                     ]
                 },
                 {
