@@ -43,7 +43,12 @@
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Hard lock: prevent any element from pushing the page wider than the viewport */
+  max-width: 100%;
+  overflow-x: hidden;
+}
 
 body {
   font-family: 'DM Sans', system-ui, sans-serif;
@@ -53,6 +58,7 @@ body {
   min-height: 100vh;
   font-size: 14px;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* =====================================================
@@ -64,6 +70,7 @@ body {
   min-height: 100vh;
   min-width: 0;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 .main-container {
@@ -72,6 +79,7 @@ body {
   padding: 24px 28px 48px;
   width: 100%;
   box-sizing: border-box;
+  min-width: 0;  /* prevents flex/grid children from overflowing */
 }
 
 /* ── Sidebar ── */
@@ -231,7 +239,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  min-width: 0;
+  min-width: 0;        /* critical: prevents flex child from overflowing */
+  max-width: 100%;
   overflow-x: hidden;
 }
 
@@ -248,12 +257,18 @@ body {
   top: 0;
   z-index: 50;
   box-shadow: var(--shadow-sm);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .admin-header-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .admin-page-title {
@@ -731,8 +746,10 @@ body {
 .metrics-table tr:hover td { background: var(--surface-1); }
 
 .rv-approver-layout {
-  display: grid; grid-template-columns: 1fr 360px;
-  gap: 20px; align-items: start;
+  display: grid;
+  grid-template-columns: 1fr clamp(280px, 30vw, 360px);
+  gap: 20px;
+  align-items: start;
 }
 
 /* =====================================================
@@ -968,6 +985,21 @@ body {
   .rv-cat-grid         { grid-template-columns: 1fr; }
   .rv-meta-grid        { grid-template-columns: 1fr 1fr; }
   .rv-hero-score       { font-size: 42px; }
+
+  /* Approver column goes full width — 360px column was overflowing */
+  .rv-approver-layout  { grid-template-columns: 1fr; }
+
+  /* Tighter horizontal padding on very small phones */
+  .main-container      { padding: 10px 10px calc(var(--mob-nav-h) + 20px); }
+  .admin-header        { padding: 0 12px; }
+}
+
+/* ── Extra-small phones (≤ 360px) ── */
+@media (max-width: 360px) {
+  .rv-meta-grid        { grid-template-columns: 1fr; }
+  .rv-hero-score       { font-size: 36px; }
+  .admin-page-title    { font-size: 12px; }
+  .main-container      { padding: 8px 8px calc(var(--mob-nav-h) + 16px); }
 }
 
 /* =====================================================
