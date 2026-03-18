@@ -10,7 +10,7 @@
  */
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const ADMIN_GAS_URL = 'https://script.google.com/macros/s/AKfycbycv21JBDXECmO99KWWYgUJVIIgCWOfYRgqSJzkG3ZwEVqKk96xk-IF9EwIsVcD6KUKlA/exec';
+const ADMIN_GAS_URL = 'https://script.google.com/macros/s/AKfycbzpcjBDo5n5HnC-awvHgscBMqtessIuoB7sK_u0Hcl081dv4gjBkU7NQtuwKEHmqRlMJw/exec';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _currentAdminView = 'dashboard';

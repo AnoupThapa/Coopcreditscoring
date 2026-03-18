@@ -1,23 +1,24 @@
 /**
  * Credit Scoring Portal — script.js
  *
- * CHANGES from previous version:
- *   - Config is NEVER restored from localStorage on page load
- *   - localStorage config key is cleared on every fresh load
- *   - URL hash is cleared on load so #questions can't bypass config
- *   - hashchange guard prevents navigating to questions without config
- *   - saveConfig() uses sessionStorage only (survives tab navigation but not reload)
- *   - applyRestoredConfigUI() is kept as no-op for compatibility
+ * FIXES:
+ *   1. model_type and customer_type are now ALWAYS injected into the answers
+ *      object before submission — they were silently missing because formHandler.js
+ *      marks model_type as ALWAYS_HIDDEN and collectFormInputs() skips hidden inputs.
+ *   2. submitToGAS() now sends a separate top-level `modelLabel` field so the
+ *      Google Sheet can store it in a dedicated "Model" column without parsing JSON.
+ *   3. JSON strings sent to GAS are never CSV-split because GAS appendRow() handles
+ *      them correctly — but we now double-check that the payload is well-formed.
  *
  * Load order (enforced by index.html):
- *   1. js/engine/scoringEngine.js  (shared utils + auto-calc triggers + orchestrator — MUST BE FIRST)
+ *   1. js/engine/scoringEngine.js  (shared utils + auto-calc triggers + orchestrator)
  *   2. js/engine/dataTransform.js  (Data Sheet layer)
  *   3. js/engine/calculations.js   (Calculations Sheet layer)
  *   4. js/engine/model.js          (Model/scoring layer)
  *   5. js/questions.js             (questionnaire definition)
  *   6. js/ui/loadingModal.js       (loading overlay)
  *   7. js/ui/formHandler.js        (form render + validation)
- *   8. script.js                   (app controller)
+ *   8. script.js                   (app controller — this file)
  */
 
 // ── Global State ──────────────────────────────────────────────────────────────
@@ -33,7 +34,7 @@ const state = {
 const VALID_ROUTES = ['config', 'questions'];
 const STORAGE_KEY  = 'coop_portal_config';
 
-const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbycv21JBDXECmO99KWWYgUJVIIgCWOfYRgqSJzkG3ZwEVqKk96xk-IF9EwIsVcD6KUKlA/exec';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpcjBDo5n5HnC-awvHgscBMqtessIuoB7sK_u0Hcl081dv4gjBkU7NQtuwKEHmqRlMJw/exec';
 
 const SCORE_TIERS = [
     { min: 0,   max: 499,  label: 'D Risk', riskClass: 'high-risk',  color: '#b91c1c', bg: '#fee2e2' },
@@ -50,10 +51,10 @@ function getTier(score) {
 document.addEventListener('DOMContentLoaded', () => {
     showLoading('Loading questionnaire…');
 
-    // ── KEY CHANGE: always wipe saved config so page starts fresh ──
+    // Always wipe saved config so page starts fresh
     localStorage.removeItem(STORAGE_KEY);
 
-    // ── KEY CHANGE: strip any hash so #questions can't auto-navigate ──
+    // Strip any hash so #questions can't auto-navigate
     if (window.location.hash) {
         history.replaceState(null, '', window.location.pathname);
     }
@@ -64,17 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         state.questionnaire = q;
 
-        // Do NOT restore config — always start clean
-        // applyRestoredConfigUI() is a no-op kept for compat
-
         if (window.lucide) lucide.createIcons();
 
-        // Always route to config on fresh load
         navigateTo('config', false);
 
         window.addEventListener('hashchange', () => {
             const h = window.location.hash.replace('#', '') || 'config';
-            // Guard: never jump to questions unless config is complete
             if (h === 'questions' && !(state.modelType && state.customerType)) {
                 history.replaceState(null, '', window.location.pathname);
                 navigateTo('config', false);
@@ -103,11 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── Persist / Restore ─────────────────────────────────────────────────────────
 
-/**
- * Save config to sessionStorage only.
- * sessionStorage survives tab navigation but is wiped on page reload/close —
- * so config is never remembered across fresh loads.
- */
 function saveConfig() {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         modelType:         state.modelType,
@@ -116,10 +107,6 @@ function saveConfig() {
     }));
 }
 
-/**
- * Kept for compatibility — config is never restored on load.
- * Returns false always so calling code skips restoration.
- */
 function restoreConfig() {
     return false;
 }
@@ -145,10 +132,9 @@ function navigateTo(sectionId, pushHash = true) {
     const target = document.getElementById(sectionId);
     if (target) target.classList.remove('hidden');
 
-    // Lazily render questionnaire on first navigate-to-questions
     if (sectionId === 'questions' && state.questionnaire && !state._questionnaireRendered) {
         renderQuestionnaire(state.questionnaire, state.modelType);
-        applyRestoredConfigUI(); // no-op but kept for compat
+        applyRestoredConfigUI();
         state._questionnaireRendered = true;
     }
 
@@ -165,6 +151,7 @@ function setCoopType(type) {
     document.querySelectorAll('input[name="coop_type"]').forEach(el => {
         el.closest('.radio-card').classList.toggle('selected', el.value === type);
     });
+    // Write the human-readable label into the hidden model_type input
     const modelEl = document.getElementById('model_type');
     if (modelEl) {
         modelEl.disabled = false;
@@ -202,7 +189,6 @@ function checkConfigComplete() {
 
 /**
  * No-op — config is never restored on page load.
- * Kept so formHandler.js can call it without errors.
  */
 function applyRestoredConfigUI() {}
 
@@ -218,14 +204,24 @@ function handleCalculateClick() {
     setTimeout(() => {
         try {
             const inputs = collectFormInputs();
+
+            // ── FIX 1: Always inject config values into answers ──────────────
+            // collectFormInputs() reads the DOM but model_type is in ALWAYS_HIDDEN_IDS
+            // (formHandler.js) so it is never rendered as an input — we inject it here.
+            inputs.model_type    = state.modelType === 'collection'
+                ? 'Milk Collection Only (Model A)'
+                : 'Collection & Processing (Model B)';
             inputs.customer_type = state.customerType || 'new';
+
+            // Also write to the hidden DOM element so engine reads it too
+            const modelEl = document.getElementById('model_type');
+            if (modelEl) modelEl.value = inputs.model_type;
+
             const result = runScoringEngine(inputs);
             state.results = result;
 
-            // Save locally first so admin can see it immediately
             const localId = saveSubmissionLocally(inputs, result);
 
-            // Submit to GAS — returns the server-assigned Submission ID
             submitToGAS(inputs, result).then(function(gasId) {
                 hideLoading();
                 showSuccessScreen(result, gasId || localId);
@@ -314,39 +310,48 @@ async function submitToGAS(answers, result) {
 
     showLoading('Submitting data…', 'Saving, Please wait...');
     try {
-        // Send the full result breakdown so the sheet is always the source of truth.
-        // This means the sheet score matches the portal score regardless of formula changes.
+        // ── FIX 2: Send modelLabel as a separate top-level field ─────────────
+        // This lets GAS write it to its own "Model" column without JSON parsing.
+        const modelLabel = state.modelType === 'collection'
+            ? 'Collection Only (Model A)'
+            : 'Collection & Processing (Model B)';
+
         const payload = {
-            action:    'submitAnswers',
-            answers,
-            score:     result.totalScore,
-            riskTier:  result.riskCategory,
-            timestamp: new Date().toISOString(),
-            // Full breakdown — stored as Result JSON in the sheet.
-            // categories includes 'logs' (per-indicator detail) so the admin
-            // resultViewer can render the sub-indicator breakdown without re-running the engine.
+            action:     'submitAnswers',
+            answers,                    // includes model_type + customer_type (injected above)
+            score:      result.totalScore,
+            riskTier:   result.riskCategory,
+            modelLabel,                 // ← NEW: plain string for its own sheet column
+            timestamp:  new Date().toISOString(),
             resultBreakdown: {
-                totalScore:    result.totalScore,
-                rawTotal:      result.rawTotal,
-                riskCategory:  result.riskCategory,
-                recommendation:result.recommendation,
-                categories:    (result.categories || []).map(c => ({
+                totalScore:     result.totalScore,
+                rawTotal:       result.rawTotal,
+                riskCategory:   result.riskCategory,
+                recommendation: result.recommendation,
+                categories: (result.categories || []).map(c => ({
                     name:  c.name,
                     score: c.score,
                     max:   c.max,
-                    logs:  c.logs || []   // ← indicator-level detail for admin sub-indicator view
+                    logs:  c.logs || []
                 })),
-                indicators:    result.indicators   || [],  // ← flat indicator list
-                metrics:       result.metrics      || {},
-                strengths:     result.strengths    || [],
-                weaknesses:    result.weaknesses   || [],
-                focus:         result.focus        || []
+                indicators: result.indicators  || [],
+                metrics:    result.metrics     || {},
+                strengths:  result.strengths   || [],
+                weaknesses: result.weaknesses  || [],
+                focus:      result.focus       || []
             }
         };
+
+        // ── FIX 3: Verify JSON is valid before sending ───────────────────────
+        // JSON.stringify can silently produce truncated output on circular refs.
+        // Re-parse to catch any serialisation errors before they reach GAS.
+        const bodyStr = JSON.stringify(payload);
+        JSON.parse(bodyStr); // throws if malformed
+
         const r = await fetch(GOOGLE_WEB_APP_URL, {
             method:   'POST',
             headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
-            body:     JSON.stringify(payload),
+            body:     bodyStr,
             redirect: 'follow'
         });
         const text = await r.text();

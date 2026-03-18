@@ -359,6 +359,11 @@ function mapSubmissionFromGAS(raw) {
     const finalRiskTier = result.riskCategory || raw['Risk Tier'] || '—';
 
     const modelType = (function () {
+        // Check the dedicated sheet column first (called 'Modal' due to original typo)
+        const sheetModal = String(raw['Modal'] || raw['Model'] || '').toLowerCase();
+        if (sheetModal.includes('processing') || sheetModal.includes('model b')) return 'processing';
+        if (sheetModal.includes('collection') || sheetModal.includes('model a')) return 'collection';
+        // Fall back to the model_type field inside answers JSON
         const mt = String(answers.model_type || '').toLowerCase();
         if (mt.includes('processing') || mt.includes('model b')) return 'processing';
         return 'collection';
