@@ -1,926 +1,1178 @@
 /**
  * questions.js — Complete Static Questionnaire Definition
- * All 15 sections for Dairy Cooperative Credit Scoring Portal
+ * Source: Official questionnaire sheet (120 questions, S.N 1–120)
  *
  * Rules enforced by formHandler.js:
- *   - readonly: true  → rendered as hidden input (not shown to user)
- *   - disabled: true  → rendered as hidden input (auto-filled by config)
- *   - isModelB: true  → only shown when model is Collection & Processing
+ *   - readonly: true  → hidden input only (auto-calculated, not shown to user)
+ *   - disabled: true  → hidden input only (auto-filled by config)
+ *   - isModelB: true  → only shown for Collection & Processing model
  *   - All visible fields are mandatory before submission
- *   - Scoring points are stripped from labels at render time
  */
 
 const QUESTIONNAIRE = {
     sections: [
 
-        // ── Section 1: Identity & Classification ──────────────────────────────
+        // ── Section 1: Identity & Classification (S.N 1–5) ───────────────────
         {
             id: 'section_1',
             title: 'Identity & Classification',
             icon: 'info',
-            subtitle: 'Basic identity and cooperative classification',
+            subtitle: 'सहकारीको पहिचान र वर्गीकरण',
             questions: [
                 {
+                    // S.N 1
                     id: 'coop_name', type: 'text',
-                    labelEng: 'Cooperative Name',
-                    labelNep: 'सहकारीको नाम',
-                    required: true, placeholder: 'e.g., ABC Dairy Cooperative'
+                    labelEng: 'What is the name of the cooperative?',
+                    labelNep: 'सहकारीको नाम के हो?',
+                    placeholder: 'e.g., ABC Dairy Cooperative'
                 },
                 {
+                    // S.N 2 — auto-filled from config, hidden
                     id: 'model_type', type: 'select',
-                    labelEng: 'Model A / B',
-                    labelNep: 'सहकारी मोडल',
+                    labelEng: 'Which model does the cooperative operate under? (A / B)',
+                    labelNep: 'सहकारी कुन मोडेलमा चलिरहेको छ? (A / B)',
                     disabled: true,
                     options: [
-                        { value: '', label: '-- Select Above --' },
-                        { value: 'Milk Collection Only (Model A)', label: 'Milk Collection Only (Model A)' },
-                        { value: 'Collection & Processing (Model B)', label: 'Collection & Processing (Model B)' }
+                        { value: '', label: 'Select' },
+                        { value: 'Milk Collection Only (Model A)', label: 'Milk Collection Only / केवल दूध सङ्कलन' },
+                        { value: 'Collection & Processing (Model B)', label: 'Processing / प्रशोधन' }
                     ]
                 },
                 {
+                    // S.N 3 — auto-filled from config, hidden
                     id: 'loan_type', type: 'select',
-                    labelEng: 'Loan New or Existing?',
-                    labelNep: 'ऋण नयाँ हो कि पहिलेबाट?',
+                    labelEng: 'Is the loan new or existing?',
+                    labelNep: 'सहकारी ऋण नयाँ हो कि पहिलेबाट छ?',
                     disabled: true,
                     options: [
-                        { value: 'New Loan', label: 'New Loan' },
-                        { value: 'Existing Loan', label: 'Existing Loan' }
+                        { value: 'New Loan', label: 'New / नयाँ' },
+                        { value: 'Existing Loan', label: 'Existing / पहिलेबाट रहेको' }
                     ]
                 },
                 {
+                    // S.N 4
                     id: 'years_operation', type: 'number',
-                    labelEng: 'Years in Operation',
-                    labelNep: 'सञ्चालनमा कति वर्ष?',
+                    labelEng: 'How many years has the cooperative been operating?',
+                    labelNep: 'सहकारी कति वर्षदेखि सञ्चालनमा छ?',
                     min: 0, placeholder: 'e.g., 10'
                 },
                 {
+                    // S.N 5
                     id: 'office_location', type: 'text',
-                    labelEng: 'Office Location',
-                    labelNep: 'कार्यालय कहाँ छ?',
+                    labelEng: 'Where is the cooperative office located?',
+                    labelNep: 'सहकारीको कार्यालय कहाँ छ?',
                     placeholder: 'e.g., Kathmandu, Bagmati'
                 }
             ]
         },
 
-        // ── Section 2: Loan Information ────────────────────────────────────────
+        // ── Section 2: Loan Information (S.N 6–11) ───────────────────────────
         {
             id: 'section_2',
             title: 'Loan Information',
             icon: 'landmark',
-            subtitle: 'Loan amount, tenure, and collateral details',
+            subtitle: 'ऋण सम्बन्धी जानकारी',
             questions: [
                 {
+                    // S.N 6
                     id: 'existing_loan', type: 'number',
-                    labelEng: 'Existing Loan Outstanding, NPR',
-                    labelNep: 'हाल चालु ऋणको बाँकी रकम',
+                    labelEng: 'What is the outstanding amount of the existing loan?',
+                    labelNep: 'हाल चालु ऋणको बाँकी रकम कति छ?',
                     min: 0, placeholder: 'e.g., 1500000',
                     oninput: 'calculateTotalLoan()'
                 },
                 {
+                    // S.N 7
                     id: 'proposed_loan', type: 'number',
-                    labelEng: 'Proposed New Loan, NPR',
-                    labelNep: 'नयाँ प्रस्तावित ऋण रकम',
+                    labelEng: 'What is the proposed new loan amount?',
+                    labelNep: 'नयाँ प्रस्तावित ऋण रकम कति हो?',
                     min: 0, placeholder: 'e.g., 2000000',
                     oninput: 'calculateTotalLoan()'
                 },
                 {
+                    // S.N 8 — auto-calculated
                     id: 'total_loan', type: 'number',
-                    labelEng: 'Total Loan (Auto)',
-                    labelNep: 'जम्मा ऋण',
+                    labelEng: 'Total Loan (existing + new) — Auto',
+                    labelNep: 'जम्मा ऋण (पुरानो + नयाँ)',
                     readonly: true
                 },
                 {
+                    // S.N 9
                     id: 'interest_rate', type: 'number',
-                    labelEng: 'Interest Rate % p.a.',
-                    labelNep: 'ऋणको ब्याजदर %',
+                    labelEng: 'What is the interest rate (%)?',
+                    labelNep: 'ऋणको ब्याजदर कति प्रतिशत छ?',
                     step: 0.01, min: 0, max: 100, placeholder: 'e.g., 10'
                 },
                 {
+                    // S.N 10
                     id: 'loan_tenure', type: 'number',
-                    labelEng: 'Loan Tenure, Months',
-                    labelNep: 'ऋण तिर्ने अवधि महिना',
+                    labelEng: 'What is the loan tenure (in months)?',
+                    labelNep: 'ऋण तिर्ने अवधि कति महिना हो?',
                     min: 1, placeholder: 'e.g., 60'
                 },
                 {
+                    // S.N 11
                     id: 'installment_freq', type: 'select',
-                    labelEng: 'Installment Frequency',
-                    labelNep: 'किस्ताको भुक्तानी आवृत्ति',
+                    labelEng: 'What is the installment frequency?',
+                    labelNep: 'किस्ताको भुक्तानी आवृत्ति के हो?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Monthly', label: 'Monthly — मासिक' },
-                        { value: 'Quarterly', label: 'Quarterly — त्रैमासिक' },
-                        { value: 'Semi-Annual', label: 'Semi-Annual — अर्धवार्षिक' },
-                        { value: 'Annual', label: 'Annual — वार्षिक' }
+                        { value: 'Monthly', label: 'Monthly / मासिक' },
+                        { value: 'Quarterly', label: 'Quarterly / त्रैमासिक' },
+                        { value: 'Annual', label: 'Annually / वार्षिक' }
                     ]
                 },
                 {
+                    // Collateral — needed for scoring
                     id: 'primary_land_value', type: 'number',
                     labelEng: 'Primary Land Collateral Value, NPR',
-                    labelNep: 'प्राथमिक धितोमा जग्गाको मूल्य',
+                    labelNep: 'प्राथमिक धितोमा जग्गाको मूल्य कति छ?',
                     min: 0, placeholder: 'e.g., 5000000'
                 }
             ]
         },
 
-        // ── Section 3: Revenue & Sales ─────────────────────────────────────────
+        // ── Section 3: Revenue & Sales (S.N 12–18) ───────────────────────────
         {
             id: 'section_3',
             title: 'Revenue & Sales',
             icon: 'trending-up',
-            subtitle: 'Income from milk sales, other products and grants',
+            subtitle: 'आम्दानी र बिक्री',
             questions: [
                 {
+                    // S.N 12
                     id: 'milk_sales', type: 'number',
-                    labelEng: 'Income from Milk Sales, NPR',
-                    labelNep: 'दूध बिक्रीबाट आम्दानी',
+                    labelEng: 'Income from milk sales?',
+                    labelNep: 'दूध बिक्रीबाट कति आम्दानी हुन्छ?',
                     min: 0, placeholder: 'e.g., 28000000',
                     oninput: 'calculateRevenue()'
                 },
                 {
+                    // S.N 13
                     id: 'other_product_sales', type: 'number',
-                    labelEng: 'Other Product Sales, NPR',
-                    labelNep: 'अन्य उत्पादन बिक्री',
+                    labelEng: 'Income from other product sales?',
+                    labelNep: 'अन्य उत्पादन बिक्रीबाट कति आम्दानी हुन्छ?',
                     min: 0, placeholder: 'e.g., 1800000',
                     oninput: 'calculateRevenue()'
                 },
                 {
+                    // S.N 14
                     id: 'other_income', type: 'number',
-                    labelEng: 'Other Income, NPR',
-                    labelNep: 'अन्य आम्दानी',
+                    labelEng: 'Other income amount?',
+                    labelNep: 'अन्य आम्दानी कति छ?',
                     min: 0, placeholder: 'e.g., 200000',
                     oninput: 'calculateRevenue()'
                 },
                 {
+                    // S.N 15 — auto-calculated
                     id: 'total_sales', type: 'number',
-                    labelEng: 'Total Sales (Auto)',
-                    labelNep: 'कुल बिक्री',
+                    labelEng: 'Total Sales — Auto',
+                    labelNep: 'कुल बिक्री कति छ?',
                     readonly: true
                 },
                 {
+                    // S.N 16
                     id: 'grant_income', type: 'number',
-                    labelEng: 'Grant / Subsidy Income, NPR',
-                    labelNep: 'अनुदानबाट आम्दानी',
+                    labelEng: 'Income from grants / subsidies?',
+                    labelNep: 'अनुदानबाट कति आम्दानी भएको छ?',
                     min: 0, placeholder: 'e.g., 500000',
                     oninput: 'calculateRevenue()'
                 },
                 {
+                    // S.N 17 — auto-calculated
                     id: 'total_revenue', type: 'number',
-                    labelEng: 'Total Revenue (Auto)',
-                    labelNep: 'कुल आम्दानी',
+                    labelEng: 'Total Revenue — Auto',
+                    labelNep: 'कुल आम्दानी (Total Revenue)',
                     readonly: true
                 },
                 {
+                    // S.N 18
                     id: 'bank_sales', type: 'number',
-                    labelEng: 'Sales via Bank, NPR',
-                    labelNep: 'बैंक मार्फत भएको बिक्री',
+                    labelEng: 'Sales received through bank?',
+                    labelNep: 'बैंक मार्फत भएको बिक्री कति छ?',
                     min: 0, placeholder: 'e.g., 15000000'
                 }
             ]
         },
 
-        // ── Section 4: Buyer Analysis ──────────────────────────────────────────
+        // ── Section 4: Buyer Analysis (S.N 19–32) ────────────────────────────
         {
             id: 'section_4',
             title: 'Buyer Analysis',
             icon: 'users',
-            subtitle: 'Buyer concentration and collection period',
+            subtitle: 'खरिदकर्ता विश्लेषण',
             questions: [
                 {
+                    // S.N 19
                     id: 'total_buyers', type: 'number',
-                    labelEng: 'Total Number of Buyers',
-                    labelNep: 'जम्मा खरिदकर्ता संख्या',
+                    labelEng: 'Total number of buyers?',
+                    labelNep: 'जम्मा खरिदकर्ता संख्या कति छ?',
                     min: 1, placeholder: 'e.g., 300'
                 },
                 {
+                    // S.N 20
                     id: 'top5_buyers_sales', type: 'number',
-                    labelEng: 'Sales from Top 5 Buyers, NPR',
-                    labelNep: 'शीर्ष ५ खरिदकर्ताबाट बिक्री',
+                    labelEng: 'Sales from top 5 buyers?',
+                    labelNep: 'शीर्ष ५ खरिदकर्ताबाट कति बिक्री हुन्छ?',
                     min: 0, placeholder: 'e.g., 8000000',
                     oninput: 'calculateBuyerShares()'
                 },
                 {
+                    // S.N 21
                     id: 'largest_buyer_sales', type: 'number',
-                    labelEng: 'Largest Single Buyer Sales, NPR',
-                    labelNep: 'सबैभन्दा ठूलो खरिदकर्ताबाट बिक्री',
+                    labelEng: 'Sales from largest single buyer?',
+                    labelNep: 'सबैभन्दा ठूलो एक जना खरिदकर्ताबाट कति बिक्री हुन्छ?',
                     min: 0, placeholder: 'e.g., 2000000',
                     oninput: 'calculateBuyerShares()'
                 },
                 {
-                    id: 'top5_buyer_pct', type: 'number',
-                    labelEng: 'Top 5 Buyers Share % (Auto)',
-                    labelNep: 'शीर्ष ५ खरिदकर्ताको हिस्सा %',
-                    readonly: true
+                    // S.N 22
+                    id: 'gov_buyer_sales', type: 'number',
+                    labelEng: 'Sales to government entities?',
+                    labelNep: 'सरकारी निकायलाई कति बिक्री हुन्छ?',
+                    min: 0, placeholder: 'e.g., 5000000'
                 },
                 {
-                    id: 'largest_buyer_pct', type: 'number',
-                    labelEng: 'Largest Buyer Share % (Auto)',
-                    labelNep: 'ठूलो खरिदकर्ताको हिस्सा %',
-                    readonly: true
+                    // S.N 23
+                    id: 'no_govt_buyers', type: 'number',
+                    labelEng: 'Number of government entity buyers?',
+                    labelNep: 'कति सरकारी निकायलाई बिक्री हुन्छ?',
+                    min: 0, placeholder: 'e.g., 2'
                 },
                 {
+                    // S.N 24
+                    id: 'large_private_buyer_sales', type: 'number',
+                    labelEng: 'Sales to large private dairies?',
+                    labelNep: 'ठूला निजी डेरीलाई कति बिक्री हुन्छ?',
+                    min: 0, placeholder: 'e.g., 10000000'
+                },
+                {
+                    // S.N 25
+                    id: 'no_private_sector_buyer', type: 'number',
+                    labelEng: 'Number of large / private sector buyers?',
+                    labelNep: 'कति निजी डेरीलाई बिक्री हुन्छ?',
+                    min: 0, placeholder: 'e.g., 5'
+                },
+                {
+                    // S.N 26
+                    id: 'small_buyer_sales', type: 'number',
+                    labelEng: 'Sales to small / unreliable buyers?',
+                    labelNep: 'साना वा अनिश्चित खरिदकर्तालाई कति बिक्री हुन्छ?',
+                    min: 0, placeholder: 'e.g., 1000000'
+                },
+                {
+                    // S.N 27
+                    id: 'no_small_buyer_sales', type: 'number',
+                    labelEng: 'Number of small / unreliable buyers?',
+                    labelNep: 'कति साना वा अनिश्चित खरिदकर्तालाई बिक्री हुन्छ?',
+                    min: 0, placeholder: 'e.g., 10'
+                },
+                {
+                    // S.N 28
                     id: 'avg_collection_days', type: 'number',
-                    labelEng: 'Avg Collection Period, Days',
-                    labelNep: 'भुक्तानी गर्न औसत दिन',
+                    labelEng: 'Average collection period (days)?',
+                    labelNep: 'खरिदकर्ताले भुक्तानी गर्न औसत कति दिन लिन्छन्?',
                     min: 0, placeholder: 'e.g., 35'
+                },
+                {
+                    // S.N 30 — auto-calculated
+                    id: 'top5_buyer_pct', type: 'number',
+                    labelEng: '% share of top 5 buyers — Auto',
+                    labelNep: 'शीर्ष ५ खरिदकर्ताको हिस्सा कति प्रतिशत छ?',
+                    readonly: true
+                },
+                {
+                    // S.N 31 — auto-calculated
+                    id: 'largest_buyer_pct', type: 'number',
+                    labelEng: '% share of largest buyer — Auto',
+                    labelNep: 'सबैभन्दा ठूलो खरिदकर्ताको हिस्सा कति प्रतिशत छ?',
+                    readonly: true
+                },
+                {
+                    // S.N 32
+                    id: 'contract_coverage', type: 'number',
+                    labelEng: 'Number of buyers under contract?',
+                    labelNep: 'कति बिक्री करार (Contract) मा छ?',
+                    min: 0, placeholder: 'e.g., 5'
                 }
             ]
         },
 
-        // ── Section 5: Operating Costs ─────────────────────────────────────────
+        // ── Section 5: Operating Costs (S.N 29, 33–47) ───────────────────────
         {
             id: 'section_5',
             title: 'Operating Costs',
             icon: 'receipt',
-            subtitle: 'All operating cost inputs for the cooperative',
+            subtitle: 'सञ्चालन खर्च',
             questions: [
                 {
+                    // S.N 29
                     id: 'raw_milk_cost', type: 'number',
-                    labelEng: 'Cost of Raw Milk Purchase, NPR',
-                    labelNep: 'कच्चा दूध किन्न खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Cost of raw milk purchase?',
+                    labelNep: 'कच्चा दूध किन्न कति खर्च हुन्छ?',
+                    min: 0, placeholder: 'e.g., 20000000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 33
                     id: 'processing_cost', type: 'number',
-                    labelEng: 'Processing Cost, NPR',
-                    labelNep: 'प्रशोधन खर्च',
-                    isModelB: true, min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Processing cost?',
+                    labelNep: 'प्रशोधन खर्च कति हुन्छ?',
+                    isModelB: true, min: 0, placeholder: 'e.g., 1000000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 34
                     id: 'packaging_cost', type: 'number',
-                    labelEng: 'Packaging Cost, NPR',
-                    labelNep: 'प्याकेजिङ खर्च',
-                    isModelB: true, min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Packaging cost?',
+                    labelNep: 'प्याकेजिङ खर्च कति हुन्छ?',
+                    isModelB: true, min: 0, placeholder: 'e.g., 500000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 35
                     id: 'transport_cost', type: 'number',
-                    labelEng: 'Transportation Cost, NPR',
-                    labelNep: 'ढुवानी खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Transportation cost?',
+                    labelNep: 'ढुवानी खर्च कति हुन्छ?',
+                    min: 0, placeholder: 'e.g., 500000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 36
                     id: 'other_processing_cost', type: 'number',
-                    labelEng: 'Other Processing Cost, NPR',
-                    labelNep: 'अन्य प्रशोधन खर्च',
-                    isModelB: true, min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Other processing cost?',
+                    labelNep: 'अन्य उत्पादन खर्च कति हुन्छ?',
+                    isModelB: true, min: 0, placeholder: 'e.g., 200000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 37
                     id: 'salary_expense', type: 'number',
-                    labelEng: 'Salary Expense, NPR',
-                    labelNep: 'तलब खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Salary expense?',
+                    labelNep: 'तलब खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 1500000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 38
                     id: 'admin_expense', type: 'number',
-                    labelEng: 'Administrative Expense, NPR',
-                    labelNep: 'प्रशासनिक खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Administrative expense?',
+                    labelNep: 'प्रशासनिक खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 400000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 39
                     id: 'electricity_expense', type: 'number',
-                    labelEng: 'Electricity Expense, NPR',
-                    labelNep: 'विद्युत खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Electricity expense?',
+                    labelNep: 'बिजुली खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 250000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 40
                     id: 'fuel_expense', type: 'number',
-                    labelEng: 'Fuel Expense, NPR',
-                    labelNep: 'इन्धन खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Fuel expense?',
+                    labelNep: 'इन्धन खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 180000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 41
                     id: 'repair_expense', type: 'number',
-                    labelEng: 'Repair & Maintenance, NPR',
-                    labelNep: 'मर्मत खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Repair & maintenance expense?',
+                    labelNep: 'मर्मत खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 120000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 42
                     id: 'rent_expense', type: 'number',
-                    labelEng: 'Rent Expense, NPR',
-                    labelNep: 'भाडा खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Rent expense?',
+                    labelNep: 'भाडा खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 100000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 43
                     id: 'other_opex', type: 'number',
-                    labelEng: 'Other Operating Expense, NPR',
-                    labelNep: 'अन्य सञ्चालन खर्च',
-                    min: 0, oninput: 'calculateExpenses()'
+                    labelEng: 'Other operating expenses?',
+                    labelNep: 'अन्य सञ्चालन खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 200000',
+                    oninput: 'calculateExpenses()'
                 },
                 {
+                    // S.N 44 — auto-calculated
                     id: 'total_opex', type: 'number',
-                    labelEng: 'Total Operating Expenses (Auto)',
-                    labelNep: 'कुल सञ्चालन खर्च',
+                    labelEng: 'Total operating expenses — Auto',
+                    labelNep: 'कुल सञ्चालन खर्च कति छ?',
                     readonly: true
                 },
                 {
-                    id: 'annual_depreciation', type: 'number',
-                    labelEng: 'Annual Depreciation, NPR',
-                    labelNep: 'वार्षिक मूल्यह्रास',
-                    min: 0, placeholder: 'e.g., 200000'
+                    // S.N 45
+                    id: 'lowest_monthly_expense', type: 'number',
+                    labelEng: 'Lowest monthly expense (lean month)?',
+                    labelNep: 'न्यूनतम (कम आम्दानी भएको महिना) खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 300000',
+                    hint: 'Enter the expense of your lowest-cost month in the year'
                 },
                 {
+                    // S.N 46
+                    id: 'annual_depreciation', type: 'number',
+                    labelEng: 'Annual depreciation?',
+                    labelNep: 'वार्षिक मूल्यह्रास कति छ?',
+                    min: 0, placeholder: 'e.g., 500000'
+                },
+                {
+                    // S.N 47
                     id: 'amortization_amount', type: 'number',
-                    labelEng: 'Amortization Amount, NPR',
-                    labelNep: 'अमोर्टाइजेसन',
+                    labelEng: 'Amortization amount?',
+                    labelNep: 'अमोर्टाइजेसन कति छ?',
                     min: 0, placeholder: 'e.g., 0'
                 }
             ]
         },
 
-        // ── Section 6: Financial Performance ──────────────────────────────────
+        // ── Section 6: Assets (S.N 48–63) ────────────────────────────────────
         {
             id: 'section_6',
-            title: 'Financial Performance',
-            icon: 'bar-chart-2',
-            subtitle: 'Cash trend, audit status and inventory',
-            questions: [
-                {
-                    id: 'cash_last_year', type: 'number',
-                    labelEng: 'Last Year Cash/Bank Balance, NPR',
-                    labelNep: 'गत वर्ष बैंक/नगद मौज्दात',
-                    min: 0, placeholder: 'e.g., 3000000'
-                },
-                {
-                    id: 'cash_prev_year', type: 'number',
-                    labelEng: 'Previous Year Cash/Bank Balance, NPR',
-                    labelNep: 'अघिल्लो वर्ष बैंक/नगद मौज्दात',
-                    min: 0, placeholder: 'e.g., 2500000'
-                },
-                {
-                    id: 'lowest_monthly_expense', type: 'number',
-                    labelEng: 'Lowest Monthly Expense (Lean Month), NPR',
-                    labelNep: 'सबैभन्दा कम खर्च हुने महिनाको खर्च',
-                    min: 0, placeholder: 'e.g., 300000',
-                    hint: 'Enter the expense of your lowest-cost month in the year'
-                },
-                {
-                    id: 'income_expense_checked', type: 'select',
-                    labelEng: 'Are accounts audited?',
-                    labelNep: 'हिसाब-किताब जाँच भयो?',
-                    options: [
-                        { value: '', label: 'Select' },
-                        { value: 'Regularly', label: 'Regularly — नियमित' },
-                        { value: 'Occasionally', label: 'Occasionally — कहिलेकाहीँ' },
-                        { value: 'Never', label: 'Never — कहिल्यै नगरेको' }
-                    ]
-                },
-                {
-                    id: 'audit_observations', type: 'number',
-                    labelEng: 'Number of Audit Observations/Issues',
-                    labelNep: 'लेखापरीक्षण अवलोकनको संख्या',
-                    min: 0, placeholder: 'e.g., 2',
-                    hint: 'Enter 0 if no issues were found'
-                },
-                {
-                    id: 'avg_inventory_value', type: 'number',
-                    labelEng: 'Average Inventory Value, NPR',
-                    labelNep: 'औसत इन्भेन्टरी मूल्य',
-                    min: 0, placeholder: 'e.g., 500000'
-                }
-            ]
-        },
-
-        // ── Section 7: Assets ──────────────────────────────────────────────────
-        {
-            id: 'section_7',
             title: 'Assets',
             icon: 'package',
-            subtitle: 'Current and fixed asset holdings',
+            subtitle: 'सम्पत्ति विवरण',
             questions: [
                 {
+                    // S.N 48
                     id: 'cash_hand', type: 'number',
-                    labelEng: 'Cash in Hand, NPR',
-                    labelNep: 'हातमा नगद',
-                    min: 0, placeholder: 'e.g., 50000',
-                    oninput: 'calculateAssets()'
-                },
-                {
-                    id: 'bank_balance', type: 'number',
-                    labelEng: 'Bank Balance, NPR',
-                    labelNep: 'बैंक खातामा रकम',
-                    min: 0, placeholder: 'e.g., 2000000',
-                    oninput: 'calculateAssets()'
-                },
-                {
-                    id: 'total_cash', type: 'number',
-                    labelEng: 'Total Cash (Auto)',
-                    labelNep: 'कुल नगद',
-                    readonly: true
-                },
-                {
-                    id: 'accounts_receivable', type: 'number',
-                    labelEng: 'Accounts Receivable, NPR',
-                    labelNep: 'लिनु बाँकी रकम',
-                    min: 0, placeholder: 'e.g., 500000',
-                    oninput: 'calculateAssets()'
-                },
-                {
-                    id: 'inventory_value', type: 'number',
-                    labelEng: 'Inventory Value, NPR',
-                    labelNep: 'इन्भेन्टरीको मूल्य',
-                    min: 0, placeholder: 'e.g., 300000',
-                    oninput: 'calculateAssets()'
-                },
-                {
-                    id: 'prepaid_expenses', type: 'number',
-                    labelEng: 'Prepaid Expenses, NPR',
-                    labelNep: 'अग्रिम भुक्तानी खर्च',
-                    min: 0, placeholder: 'e.g., 50000',
-                    oninput: 'calculateAssets()'
-                },
-                {
-                    id: 'other_current_assets', type: 'number',
-                    labelEng: 'Other Current Assets, NPR',
-                    labelNep: 'अन्य चालु सम्पत्ति',
+                    labelEng: 'Cash in hand?',
+                    labelNep: 'हातमा नगद कति छ?',
                     min: 0, placeholder: 'e.g., 100000',
                     oninput: 'calculateAssets()'
                 },
                 {
-                    id: 'total_current_assets', type: 'number',
-                    labelEng: 'Total Current Assets (Auto)',
-                    labelNep: 'कुल चालु सम्पत्ति',
+                    // S.N 49
+                    id: 'bank_balance', type: 'number',
+                    labelEng: 'Bank balance?',
+                    labelNep: 'बैंक खातामा कति रकम छ?',
+                    min: 0, placeholder: 'e.g., 2000000',
+                    oninput: 'calculateAssets()'
+                },
+                {
+                    // S.N 50 — auto-calculated
+                    id: 'total_cash', type: 'number',
+                    labelEng: 'Total cash (hand + bank) — Auto',
+                    labelNep: 'जम्मा नगद (हात + बैंक) कति छ?',
                     readonly: true
                 },
                 {
+                    // S.N 51
+                    id: 'accounts_receivable', type: 'number',
+                    labelEng: 'Accounts receivable amount?',
+                    labelNep: 'पाउनु पर्ने रकम (Accounts Receivable) कति छ?',
+                    min: 0, placeholder: 'e.g., 500000',
+                    oninput: 'calculateAssets()'
+                },
+                {
+                    // S.N 52
+                    id: 'inventory_value', type: 'number',
+                    labelEng: 'Inventory value?',
+                    labelNep: 'गोदाममा स्टक कति मूल्यको छ?',
+                    min: 0, placeholder: 'e.g., 300000',
+                    oninput: 'calculateAssets()'
+                },
+                {
+                    // S.N 53
+                    id: 'prepaid_expenses', type: 'number',
+                    labelEng: 'Prepaid expenses?',
+                    labelNep: 'अग्रिम तिरेको खर्च कति छ?',
+                    min: 0, placeholder: 'e.g., 50000',
+                    oninput: 'calculateAssets()'
+                },
+                {
+                    // S.N 54
+                    id: 'other_current_assets', type: 'number',
+                    labelEng: 'Other current assets?',
+                    labelNep: 'अन्य चालु सम्पत्ति कति छ?',
+                    min: 0, placeholder: 'e.g., 100000',
+                    oninput: 'calculateAssets()'
+                },
+                {
+                    // S.N 55 — auto-calculated
+                    id: 'total_current_assets', type: 'number',
+                    labelEng: 'Total current assets — Auto',
+                    labelNep: 'कुल चालु सम्पत्ति कति छ?',
+                    readonly: true
+                },
+                {
+                    // S.N 56
                     id: 'land_value', type: 'number',
-                    labelEng: 'Land Value, NPR',
-                    labelNep: 'जग्गाको मूल्य',
+                    labelEng: 'Land value?',
+                    labelNep: 'जग्गाको मूल्य कति छ?',
                     min: 0, placeholder: 'e.g., 5000000',
                     oninput: 'calculateAssets()'
                 },
                 {
+                    // S.N 57
                     id: 'building_value', type: 'number',
-                    labelEng: 'Building Value, NPR',
-                    labelNep: 'भवनको मूल्य',
+                    labelEng: 'Building value?',
+                    labelNep: 'भवनको मूल्य कति छ?',
                     min: 0, placeholder: 'e.g., 2000000',
                     oninput: 'calculateAssets()'
                 },
                 {
+                    // S.N 58
                     id: 'machinery_value', type: 'number',
-                    labelEng: 'Machinery & Equipment Value, NPR',
-                    labelNep: 'मेसिनरी र उपकरणको मूल्य',
+                    labelEng: 'Machinery value?',
+                    labelNep: 'मेसिनरीको मूल्य कति छ?',
                     min: 0, placeholder: 'e.g., 1500000',
                     oninput: 'calculateAssets()'
                 },
                 {
+                    // S.N 59
                     id: 'vehicle_value', type: 'number',
-                    labelEng: 'Vehicle Value, NPR',
-                    labelNep: 'सवारी साधनको मूल्य',
+                    labelEng: 'Vehicle value?',
+                    labelNep: 'सवारी साधनको मूल्य कति छ?',
                     min: 0, placeholder: 'e.g., 800000',
                     oninput: 'calculateAssets()'
                 },
                 {
+                    // S.N 60
                     id: 'furniture_value', type: 'number',
-                    labelEng: 'Furniture & Fixtures, NPR',
-                    labelNep: 'फर्निचर र फिक्सचरको मूल्य',
+                    labelEng: 'Furniture value?',
+                    labelNep: 'फर्निचरको मूल्य कति छ?',
                     min: 0, placeholder: 'e.g., 200000',
                     oninput: 'calculateAssets()'
                 },
                 {
+                    // S.N 61
                     id: 'other_fixed_assets', type: 'number',
-                    labelEng: 'Other Fixed Assets, NPR',
-                    labelNep: 'अन्य स्थायी सम्पत्ति',
+                    labelEng: 'Other fixed assets?',
+                    labelNep: 'अन्य स्थिर सम्पत्ति कति छ?',
                     min: 0, placeholder: 'e.g., 100000',
                     oninput: 'calculateAssets()'
                 },
                 {
+                    // S.N 62 — auto-calculated
                     id: 'total_fixed_assets', type: 'number',
-                    labelEng: 'Total Fixed Assets (Auto)',
-                    labelNep: 'कुल स्थायी सम्पत्ति',
+                    labelEng: 'Total fixed assets — Auto',
+                    labelNep: 'कुल अचल सम्पत्ति कति छ?',
                     readonly: true
                 },
                 {
+                    // S.N 63 — auto-calculated
                     id: 'total_assets', type: 'number',
-                    labelEng: 'Total Assets (Auto)',
-                    labelNep: 'कुल सम्पत्ति',
+                    labelEng: 'Total assets — Auto',
+                    labelNep: 'कुल सम्पत्ति कति छ?',
                     readonly: true
                 }
             ]
         },
 
-        // ── Section 8: Liabilities ─────────────────────────────────────────────
+        // ── Section 7: Liabilities (S.N 64–72) ───────────────────────────────
         {
-            id: 'section_8',
+            id: 'section_7',
             title: 'Liabilities',
             icon: 'credit-card',
-            subtitle: 'Current and long-term liabilities',
+            subtitle: 'दायित्व विवरण',
             questions: [
                 {
+                    // S.N 64
                     id: 'accounts_payable', type: 'number',
-                    labelEng: 'Accounts Payable, NPR',
-                    labelNep: 'दिनु बाँकी रकम',
+                    labelEng: 'Accounts payable?',
+                    labelNep: 'तिर्नुपर्ने बिल (Accounts Payable) कति छ?',
                     min: 0, placeholder: 'e.g., 500000',
                     oninput: 'calculateLiabilities()'
                 },
                 {
+                    // S.N 65
                     id: 'short_term_loan', type: 'number',
-                    labelEng: 'Short-Term Loan, NPR',
-                    labelNep: 'अल्पकालीन ऋण',
+                    labelEng: 'Short-term loan?',
+                    labelNep: 'छोटो अवधिको ऋण कति छ?',
                     min: 0, placeholder: 'e.g., 1000000',
                     oninput: 'calculateLiabilities()'
                 },
                 {
+                    // S.N 66
                     id: 'accrued_expenses', type: 'number',
-                    labelEng: 'Accrued Expenses, NPR',
-                    labelNep: 'सञ्चित खर्च',
+                    labelEng: 'Accrued expenses?',
+                    labelNep: 'तिर्न बाँकी खर्च कति छ?',
                     min: 0, placeholder: 'e.g., 200000',
                     oninput: 'calculateLiabilities()'
                 },
                 {
+                    // S.N 67
                     id: 'current_ltd', type: 'number',
-                    labelEng: 'Current Portion of Long-Term Debt, NPR',
-                    labelNep: 'दीर्घकालीन ऋणको चालु भाग',
+                    labelEng: 'Current portion of long-term debt?',
+                    labelNep: 'दीर्घकालीन ऋणको चालु भाग कति छ?',
                     min: 0, placeholder: 'e.g., 600000',
                     oninput: 'calculateLiabilities()'
                 },
                 {
+                    // S.N 68 — auto-calculated
                     id: 'total_current_liabilities', type: 'number',
-                    labelEng: 'Total Current Liabilities (Auto)',
-                    labelNep: 'कुल चालु दायित्व',
+                    labelEng: 'Total current liabilities — Auto',
+                    labelNep: 'कुल चालु दायित्व कति छ?',
                     readonly: true
                 },
                 {
+                    // S.N 69
                     id: 'long_term_loan', type: 'number',
-                    labelEng: 'Long-Term Loan, NPR',
-                    labelNep: 'दीर्घकालीन ऋण',
+                    labelEng: 'Long-term loan?',
+                    labelNep: 'दीर्घकालीन ऋण कति छ?',
                     min: 0, placeholder: 'e.g., 3000000',
                     oninput: 'calculateLiabilities()'
                 },
                 {
+                    // S.N 70
                     id: 'other_ltl', type: 'number',
-                    labelEng: 'Other Long-Term Liabilities, NPR',
-                    labelNep: 'अन्य दीर्घकालीन दायित्व',
+                    labelEng: 'Other long-term liabilities?',
+                    labelNep: 'अन्य दीर्घकालीन दायित्व कति छ?',
                     min: 0, placeholder: 'e.g., 0',
                     oninput: 'calculateLiabilities()'
                 },
                 {
+                    // S.N 71 — auto-calculated
                     id: 'total_long_term_liabilities', type: 'number',
-                    labelEng: 'Total Long-Term Liabilities (Auto)',
-                    labelNep: 'कुल दीर्घकालीन दायित्व',
+                    labelEng: 'Total long-term liabilities — Auto',
+                    labelNep: 'कुल दीर्घकालीन दायित्व कति छ?',
                     readonly: true
                 },
                 {
+                    // S.N 72 — auto-calculated
                     id: 'total_liabilities', type: 'number',
-                    labelEng: 'Total Liabilities (Auto)',
-                    labelNep: 'कुल दायित्व',
+                    labelEng: 'Total liabilities — Auto',
+                    labelNep: 'कुल दायित्व कति छ?',
                     readonly: true
                 }
             ]
         },
 
-        // ── Section 9: Net Worth & Equity ──────────────────────────────────────
+        // ── Section 8: Net Worth (S.N 73–76) ─────────────────────────────────
         {
-            id: 'section_9',
+            id: 'section_8',
             title: 'Net Worth & Equity',
             icon: 'trending-up',
-            subtitle: 'Equity, reserves and net worth position',
+            subtitle: 'नेट वर्थ र इक्विटी',
             questions: [
                 {
+                    // S.N 73
                     id: 'paid_up_capital', type: 'number',
-                    labelEng: 'Paid-Up Capital, NPR',
-                    labelNep: 'चुक्ता पूँजी',
+                    labelEng: 'Paid-up capital?',
+                    labelNep: 'चुक्ता पूँजी (Paid Up Capital) कति छ?',
                     min: 0, placeholder: 'e.g., 2000000',
                     oninput: 'calculateNetWorth()'
                 },
                 {
+                    // S.N 74
                     id: 'retained_earnings', type: 'number',
-                    labelEng: 'Retained Earnings, NPR',
-                    labelNep: 'संचित नाफा',
+                    labelEng: 'Retained earnings?',
+                    labelNep: 'सञ्चित नाफा (Retained Earnings) कति छ?',
                     placeholder: 'e.g., 500000 (can be negative)',
                     oninput: 'calculateNetWorth()'
                 },
                 {
+                    // S.N 75
                     id: 'reserve_fund', type: 'number',
-                    labelEng: 'Reserve Fund, NPR',
-                    labelNep: 'कोष / रिजर्भ',
+                    labelEng: 'Reserve fund?',
+                    labelNep: 'जगेडा / Reserve कोष कति छ?',
                     min: 0, placeholder: 'e.g., 300000',
                     oninput: 'calculateNetWorth()'
                 },
                 {
+                    // S.N 76 — auto-calculated
                     id: 'total_net_worth', type: 'number',
-                    labelEng: 'Total Net Worth (Auto)',
-                    labelNep: 'कुल निवल सम्पत्ति',
+                    labelEng: 'Total Net Worth — Auto',
+                    labelNep: 'कुल नेट वर्थ (Total Networth)',
                     readonly: true
                 }
             ]
         },
 
-        // ── Section 10: Milk Collection & Supply ──────────────────────────────
+        // ── Section 9: Milk Collection & Supply (S.N 77–91) ──────────────────
         {
-            id: 'section_10',
+            id: 'section_9',
             title: 'Milk Collection & Supply',
             icon: 'droplets',
-            subtitle: 'Milk volumes, losses and farmer data',
+            subtitle: 'दूध सङ्कलन र आपूर्ति',
             questions: [
                 {
+                    // S.N 77
                     id: 'total_milk_collected', type: 'number',
-                    labelEng: 'Total Milk Collected (Annual), Litres',
-                    labelNep: 'वार्षिक जम्मा दूध सङ्कलन लिटर',
+                    labelEng: 'Total milk collected (litres)?',
+                    labelNep: 'जम्मा सङ्कलन गरिएको दूध (Total Gross Milk Collected) कति लिटर हो?',
                     min: 0, placeholder: 'e.g., 2000000',
                     oninput: 'calculateMilkMetrics()'
                 },
                 {
+                    // S.N 78
                     id: 'milk_loss', type: 'number',
-                    labelEng: 'Milk Loss (Collection), Litres',
-                    labelNep: 'दूध हानी (सङ्कलनमा)',
+                    labelEng: 'Milk loss during collection (litres)?',
+                    labelNep: 'दूध नोक्सानी (Milk Loss) कति लिटर भयो?',
                     min: 0, placeholder: 'e.g., 40000',
                     oninput: 'calculateMilkMetrics()'
                 },
                 {
+                    // S.N 79 — Model B only
                     id: 'processing_loss', type: 'number',
-                    labelEng: 'Milk Loss (Processing), Litres',
-                    labelNep: 'दूध हानी (प्रशोधनमा)',
+                    labelEng: 'Processing loss (litres)?',
+                    labelNep: 'प्रोसेस गर्दा हुने घाटा (Loss During Process) कति लिटर भयो?',
                     isModelB: true, min: 0, placeholder: 'e.g., 20000',
                     oninput: 'calculateMilkMetrics()'
                 },
                 {
+                    // S.N 80 — auto-calculated
                     id: 'total_milk_sold', type: 'number',
-                    labelEng: 'Total Milk Sold / Dispatched (Auto)',
-                    labelNep: 'कुल दूध बिक्री / पठाइएको',
+                    labelEng: 'Total milk sold / dispatched — Auto',
+                    labelNep: 'बिक्री भएको दूध (Total Milk Quantity) कति लिटर भयो?',
                     readonly: true
                 },
                 {
+                    // S.N 81
                     id: 'avg_monthly_milk', type: 'number',
-                    labelEng: 'Average Monthly Milk Collection, Litres',
-                    labelNep: 'मासिक औसत दूध सङ्कलन',
+                    labelEng: 'Average monthly milk collection (litres)?',
+                    labelNep: 'औसत मासिक दूध सङ्कलन (Average Monthly Milk) कति लिटर हो?',
                     min: 0, placeholder: 'e.g., 170000'
                 },
                 {
+                    // S.N 82
                     id: 'lowest_monthly_milk', type: 'number',
-                    labelEng: 'Lowest Monthly Milk Collection, Litres',
-                    labelNep: 'सबैभन्दा कम महिनाको दूध सङ्कलन',
+                    labelEng: 'Lowest monthly milk (litres)?',
+                    labelNep: 'सबैभन्दा कम मासिक दूध (Lowest Monthly Milk) कति लिटर हो?',
                     min: 0, placeholder: 'e.g., 100000'
                 },
                 {
-                    id: 'collection_days', type: 'number',
-                    labelEng: 'Collection Days per Year',
-                    labelNep: 'वार्षिक सङ्कलन दिन',
-                    min: 0, max: 365, placeholder: 'e.g., 340'
+                    // S.N 83
+                    id: 'highest_monthly_milk', type: 'number',
+                    labelEng: 'Highest monthly milk (litres)?',
+                    labelNep: 'सबैभन्दा बढी मासिक दूध (Highest Monthly Milk) कति लिटर हो?',
+                    min: 0, placeholder: 'e.g., 250000'
                 },
                 {
+                    // S.N 84
+                    id: 'avg_inventory_value', type: 'number',
+                    labelEng: 'Average inventory value?',
+                    labelNep: 'औसत स्टक (Inventory) कति मूल्यको छ?',
+                    min: 0, placeholder: 'e.g., 500000'
+                },
+                {
+                    // S.N 85
+                    id: 'credit_period_given_days', type: 'number',
+                    labelEng: 'Credit period given to farmers (days)?',
+                    labelNep: 'किसानलाई दिनु भएको क्रेडिट अवधि (Credit Period Given) कति दिनको हो?',
+                    min: 0, placeholder: 'e.g., 15'
+                },
+                {
+                    // S.N 86
+                    id: 'top5_farmers_milk', type: 'number',
+                    labelEng: 'Milk from top 5 farmers (litres)?',
+                    labelNep: 'शीर्ष ५ किसानबाट कति दूध सङ्कलन भयो?',
+                    min: 0, placeholder: 'e.g., 300000'
+                },
+                {
+                    // S.N 87
+                    id: 'highest_farmer_qty', type: 'number',
+                    labelEng: 'Highest supplying farmer (litres)?',
+                    labelNep: 'सबैभन्दा धेरै दूध दिने किसान कति लिटर दिएको?',
+                    min: 0, placeholder: 'e.g., 80000'
+                },
+                {
+                    // S.N 88
+                    id: 'lowest_farmer_qty', type: 'number',
+                    labelEng: 'Lowest supplying farmer (litres)?',
+                    labelNep: 'सबैभन्दा कम दूध दिने किसान कति लिटर दिएको?',
+                    min: 0, placeholder: 'e.g., 500'
+                },
+                {
+                    // S.N 89
                     id: 'total_farmers', type: 'number',
-                    labelEng: 'Total Number of Farmers',
-                    labelNep: 'कुल किसान संख्या',
+                    labelEng: 'Total number of farmers?',
+                    labelNep: 'कुल किसान संख्या कति छ?',
                     min: 0, placeholder: 'e.g., 450',
                     oninput: 'calculateMilkMetrics()'
                 },
                 {
+                    // S.N 90 — auto-calculated
                     id: 'avg_milk_per_farmer', type: 'number',
-                    labelEng: 'Avg Milk per Farmer (Auto), Litres',
-                    labelNep: 'प्रति किसान औसत दूध लिटर',
+                    labelEng: 'Average milk per farmer (litres) — Auto',
+                    labelNep: 'प्रति किसान औसत दूध कति लिटर छ?',
                     readonly: true
                 },
                 {
-                    id: 'top5_farmers_milk', type: 'number',
-                    labelEng: 'Top 5 Farmers Milk Share, Litres',
-                    labelNep: 'शीर्ष ५ किसानको दूध सङ्कलन',
-                    min: 0, placeholder: 'e.g., 300000',
-                    hint: 'Total milk collected by your top 5 supplying farmers'
+                    // S.N 91
+                    id: 'collection_days', type: 'number',
+                    labelEng: 'Total milk collection days in a year?',
+                    labelNep: 'कति दिन दूध सङ्कलन भएको छ?',
+                    min: 0, max: 365, placeholder: 'e.g., 340'
                 }
             ]
         },
 
-        // ── Section 11: Logistics & Infrastructure ────────────────────────────
+        // ── Section 10: Loan Recovery & NPA (S.N 92–97) ──────────────────────
         {
-            id: 'section_11',
-            title: 'Logistics & Infrastructure',
-            icon: 'truck',
-            subtitle: 'Logistics, infrastructure and risk assessment',
-            questions: [
-                {
-                    id: 'vehicle_avail_pct', type: 'number',
-                    labelEng: 'Vehicle Availability %, Annual',
-                    labelNep: 'सवारी उपलब्धता % वार्षिक',
-                    min: 0, max: 100, placeholder: 'e.g., 85'
-                },
-                {
-                    id: 'storage_cold_facility', type: 'select',
-                    labelEng: 'Cold Storage / Chilling Facility?',
-                    labelNep: 'चिसो भण्डारण सुविधा छ?',
-                    options: [
-                        { value: '', label: 'Select' },
-                        { value: 'Yes', label: 'Yes — भएको छ' },
-                        { value: 'No', label: 'No — छैन' }
-                    ]
-                },
-                {
-                    id: 'digital_mis_pos', type: 'select',
-                    labelEng: 'Digital MIS / POS System?',
-                    labelNep: 'डिजिटल एमआईएस / पीओएस प्रणाली?',
-                    options: [
-                        { value: '', label: 'Select' },
-                        { value: 'Yes', label: 'Yes — पूर्णरूपमा' },
-                        { value: 'Partial', label: 'Partial — आंशिक' },
-                        { value: 'No', label: 'No — छैन' }
-                    ]
-                },
-                {
-                    id: 'quality_sop_score', type: 'select',
-                    labelEng: 'Quality SOP / Compliance Level',
-                    labelNep: 'गुणस्तर SOP / अनुपालन स्तर',
-                    hint: 'Rate the level of quality standards and SOP compliance in your cooperative',
-                    options: [
-                        { value: '', label: 'Select' },
-                        { value: '85', label: 'Strong — उच्च' },
-                        { value: '65', label: 'Good — राम्रो' },
-                        { value: '45', label: 'Basic — आधारभूत' },
-                        { value: '15', label: 'None / Very Poor — छैन' }
-                    ]
-                },
-                {
-                    id: 'climatic_risk_score', type: 'select',
-                    labelEng: 'Climatic / Natural Disaster Risk Level',
-                    labelNep: 'जलवायु / प्राकृतिक प्रकोप जोखिम स्तर',
-                    hint: 'Select the level of climatic or natural disaster risk in your area',
-                    options: [
-                        { value: '', label: 'Select' },
-                        { value: '2', label: 'Low — न्यून जोखिम' },
-                        { value: '5', label: 'Medium — मध्यम जोखिम' },
-                        { value: '8', label: 'High — उच्च जोखिम' }
-                    ]
-                }
-            ]
-        },
-
-        // ── Section 12: Loan Recovery & NPA ───────────────────────────────────
-        {
-            id: 'section_12',
+            id: 'section_10',
             title: 'Loan Recovery & NPA',
             icon: 'alert-circle',
-            subtitle: 'Member loan portfolio and repayment quality',
+            subtitle: 'ऋण असुली र खराब ऋण',
             questions: [
                 {
+                    // S.N 92
                     id: 'total_member_loans', type: 'number',
-                    labelEng: 'Total Member Loans Outstanding, NPR',
-                    labelNep: 'सदस्यहरूको कुल ऋण बाँकी',
+                    labelEng: 'Total member loans?',
+                    labelNep: 'सदस्यलाई दिइएको कुल ऋण (Total Member Loans) कति छ?',
                     min: 0, placeholder: 'e.g., 5000000'
                 },
                 {
+                    // S.N 93
                     id: 'npa_member_loans', type: 'number',
-                    labelEng: 'NPA Member Loans, NPR',
-                    labelNep: 'खराब ऋण (NPA) रकम',
+                    labelEng: 'NPA member loans?',
+                    labelNep: 'खराब ऋण (NPA Member Loans) कति छ?',
                     min: 0, placeholder: 'e.g., 200000',
                     hint: 'Non-Performing Assets — loans overdue by 90+ days'
                 },
                 {
+                    // S.N 94
+                    id: 'overdue_member_loans', type: 'number',
+                    labelEng: 'Overdue member loans?',
+                    labelNep: 'म्याद नाघेको सदस्य ऋण (Overdue Member Loans) कति छ?',
+                    min: 0, placeholder: 'e.g., 300000'
+                },
+                {
+                    // S.N 95
+                    id: 'restructured_loans_3yr', type: 'select',
+                    labelEng: 'Restructured loans in past 3 years?',
+                    labelNep: 'पछिल्लो ३ वर्षमा पुनर्संरचना (Restructured Loans Past 3 yrs) कति भयो?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'None', label: 'Never / कहिल्यै होइन' },
+                        { value: 'Few Times', label: 'Few Times / केही पटक' },
+                        { value: 'Frequently', label: 'Frequent / बारम्बार' }
+                    ]
+                },
+                {
+                    // S.N 96
                     id: 'max_dpd_members', type: 'number',
-                    labelEng: 'Maximum Days Past Due (Members)',
-                    labelNep: 'सदस्यहरूको अधिकतम विलम्बित दिन',
+                    labelEng: 'Maximum DPD days by members?',
+                    labelNep: 'सबैभन्दा बढी ढिला भएको दिन (Max DPD) कति हो?',
                     min: 0, placeholder: 'e.g., 45'
                 },
                 {
-                    id: 'restructured_loans_3yr', type: 'select',
-                    labelEng: 'Loan Restructuring in Past 3 Years?',
-                    labelNep: 'पछिल्लो ३ वर्षमा ऋण पुनर्संरचना?',
+                    // S.N 97
+                    id: 'credit_history_flag', type: 'select',
+                    labelEng: 'Credit history of members?',
+                    labelNep: 'सहकारीको क्रेडिट इतिहास कस्तो छ? (Credit History Members)',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'None', label: 'None — भएको छैन' },
-                        { value: 'Few Times', label: 'Few Times — केही पटक' },
-                        { value: 'Frequently', label: 'Frequently — धेरै पटक' }
+                        { value: 'Timely', label: 'Timely / समयमा' },
+                        { value: 'With few delays', label: 'With few delays' },
+                        { value: 'Frequent delays', label: 'Frequent delays / बारम्बार ढिलाइ' }
                     ]
                 }
             ]
         },
 
-        // ── Section 13: Governance & Management ───────────────────────────────
+        // ── Section 11: Financial Performance (S.N 98–99, 102) ───────────────
         {
-            id: 'section_13',
-            title: 'Governance & Management',
-            icon: 'shield',
-            subtitle: 'Management experience and governance practices',
+            id: 'section_11',
+            title: 'Financial Performance',
+            icon: 'bar-chart-2',
+            subtitle: 'वित्तीय प्रदर्शन र लेखापरीक्षण',
             questions: [
                 {
+                    // S.N 98
+                    id: 'cash_last_year', type: 'number',
+                    labelEng: 'Last year cash / bank balance?',
+                    labelNep: 'गत वर्ष बैंक/नगद मौज्दात कति थियो?',
+                    min: 0, placeholder: 'e.g., 3000000'
+                },
+                {
+                    // S.N 99
+                    id: 'cash_prev_year', type: 'number',
+                    labelEng: 'Previous year cash / bank balance?',
+                    labelNep: 'अघिल्लो वर्ष बैंक/नगद मौज्दात कति थियो?',
+                    min: 0, placeholder: 'e.g., 2500000'
+                },
+                {
+                    // S.N 102
+                    id: 'audit_observations', type: 'number',
+                    labelEng: 'Number of audit observations / issues?',
+                    labelNep: 'अडिटमा भेटिएका कमजोरीको संख्या कति छ?',
+                    min: 0, placeholder: 'e.g., 2',
+                    hint: 'Enter 0 if no audit issues were found'
+                }
+            ]
+        },
+
+        // ── Section 12: Governance & Management (S.N 100–104) ────────────────
+        {
+            id: 'section_12',
+            title: 'Governance & Management',
+            icon: 'shield',
+            subtitle: 'व्यवस्थापन र शासन',
+            questions: [
+                {
+                    // S.N 100
                     id: 'mgmt_experience', type: 'number',
-                    labelEng: 'Management Experience, Years',
-                    labelNep: 'व्यवस्थापकीय अनुभव वर्ष',
+                    labelEng: 'Average management experience (years)?',
+                    labelNep: 'व्यवस्थापन टोली औसत अनुभव कति वर्ष छ?',
                     min: 0, placeholder: 'e.g., 8'
                 },
                 {
+                    // S.N 101
                     id: 'internal_control_score', type: 'select',
-                    labelEng: 'Internal Control Strength',
-                    labelNep: 'आन्तरिक नियन्त्रण बलियोपन',
+                    labelEng: 'Internal control score?',
+                    labelNep: 'आन्तरिक नियन्त्रण स्कोर कति छ?',
                     hint: 'Assess the overall strength of internal financial controls',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: '85', label: 'Strong — बलियो' },
-                        { value: '65', label: 'Adequate — पर्याप्त' },
-                        { value: '45', label: 'Weak — कमजोर' },
-                        { value: '20', label: 'Very Weak — धेरै कमजोर' }
+                        { value: '85', label: 'Robust / बलियो' },
+                        { value: '65', label: 'Adequate / पर्याप्त' },
+                        { value: '20', label: 'Weak / कमजोर' }
                     ]
                 },
                 {
+                    // S.N 103
                     id: 'loan_policy_compliance', type: 'select',
-                    labelEng: 'Loan Policy Compliance?',
-                    labelNep: 'ऋण नीति पालना भयो?',
+                    labelEng: 'Loan policy compliance?',
+                    labelNep: 'ऋण नीति पालन भएको छ कि छैन?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Yes', label: 'Yes — भयो' },
-                        { value: 'No', label: 'No — भएन' }
+                        { value: 'Yes', label: 'Yes / हो' },
+                        { value: 'No', label: 'No / होइन' }
                     ]
                 },
                 {
-                    id: 'meeting_frequency', type: 'select',
-                    labelEng: 'Committee Meeting Frequency',
-                    labelNep: 'समिति बैठकको आवृत्ति',
+                    // S.N 104
+                    id: 'vehicle_avail_pct', type: 'select',
+                    labelEng: 'Vehicle availability (%)?',
+                    labelNep: 'गाडी उपलब्धता प्रतिशत कति छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Weekly', label: 'Weekly — साप्ताहिक' },
-                        { value: 'Bi-Weekly', label: 'Bi-Weekly — दुई सातामा' },
-                        { value: 'Monthly', label: 'Monthly — मासिक' },
-                        { value: 'Rarely', label: 'Rarely — कहिलेकाहीँ' }
+                        { value: 'Yes', label: 'Yes / हो' },
+                        { value: 'No', label: 'No / होइन' }
                     ]
                 }
             ]
         },
 
-        // ── Section 14: External Risk & Credit History ─────────────────────────
+        // ── Section 13: Logistics & Infrastructure (S.N 105–110) ─────────────
         {
-            id: 'section_14',
-            title: 'External Risk & Credit History',
-            icon: 'globe',
-            subtitle: 'Insurance, regulatory compliance and BFI credit record',
+            id: 'section_13',
+            title: 'Logistics & Infrastructure',
+            icon: 'truck',
+            subtitle: 'भण्डारण, प्रविधि र जोखिम',
             questions: [
                 {
+                    // S.N 105
+                    id: 'storage_cold_facility', type: 'select',
+                    labelEng: 'Storage / cold facility available?',
+                    labelNep: 'गोदाम/चिस्यान सुविधा छ कि छैन?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Yes', label: 'Yes / हो' },
+                        { value: 'No', label: 'No / होइन' }
+                    ]
+                },
+                {
+                    // S.N 106
+                    id: 'quality_sop_score', type: 'select',
+                    labelEng: 'Are there standards for milk collection, handling and storage? Are written documents available?',
+                    labelNep: 'के दूध सङ्कलन, व्यवस्थापन, र भण्डारणका लागि मापदण्डहरू छन्? के तिनीहरूको लिखित दस्तावेज उपलब्ध छ?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: '85', label: 'Standards and documents exist / मापदण्ड र दस्तावेज छन्' },
+                        { value: '65', label: 'Standards exist, no documents / मापदण्ड छन्, दस्तावेज छैन' },
+                        { value: '15', label: 'No standards / मापदण्ड छैन' }
+                    ]
+                },
+                {
+                    // S.N 107
                     id: 'insurance_available', type: 'select',
-                    labelEng: 'Insurance Coverage Available?',
-                    labelNep: 'बीमा सुरक्षा छ?',
+                    labelEng: 'Insurance available?',
+                    labelNep: 'बीमा भएको छ कि छैन?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Yes', label: 'Yes — छ' },
-                        { value: 'No', label: 'No — छैन' }
+                        { value: 'Yes', label: 'Yes / हो' },
+                        { value: 'No', label: 'No / होइन' }
                     ]
                 },
                 {
+                    // S.N 108
+                    id: 'digital_mis_pos', type: 'select',
+                    labelEng: 'Digital MIS / POS / QR used?',
+                    labelNep: 'डिजिटल MIS / POS / QR प्रयोग भएको छ कि छैन?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Yes', label: 'Yes / हो' },
+                        { value: 'Partial', label: 'Partial / आंशिक' },
+                        { value: 'No', label: 'No / होइन' }
+                    ]
+                },
+                {
+                    // S.N 109
                     id: 'regulatory_compliance', type: 'select',
-                    labelEng: 'Regulatory Compliance Status',
-                    labelNep: 'नियामक अनुपालन स्थिति',
+                    labelEng: 'Regulatory compliance?',
+                    labelNep: 'नियामक पालना भएको छ कि छैन?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Yes', label: 'Yes — पूर्ण' },
-                        { value: 'Partial', label: 'Partial — आंशिक' },
-                        { value: 'No', label: 'No — छैन' }
+                        { value: 'Yes', label: 'Full / पूर्ण' },
+                        { value: 'Partial', label: 'Partial / आंशिक' },
+                        { value: 'No', label: 'None / कुनै पनि छैन' }
                     ]
                 },
                 {
-                    id: 'credit_history_bfi', type: 'select',
-                    labelEng: 'BFI Credit Classification',
-                    labelNep: 'बैंक / वित्त संस्थाको कर्जा वर्गीकरण',
+                    // S.N 110
+                    id: 'climatic_risk_score', type: 'select',
+                    labelEng: 'Climatic risk score?',
+                    labelNep: 'मौसम जोखिम (Climatic Risk Score) कति छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Pass', label: 'Pass — सामान्य' },
-                        { value: 'Watch List', label: 'Watch List — निगरानी' },
-                        { value: 'Substandard', label: 'Substandard — अनियमित' },
-                        { value: 'Doubtful', label: 'Doubtful — शंकास्पद' },
-                        { value: 'Loss', label: 'Loss — नोक्सान' }
+                        { value: '2', label: 'Low / कम' },
+                        { value: '5', label: 'Medium / मध्यम' },
+                        { value: '8', label: 'High / उच्च' }
                     ]
-                },
-                {
-                    id: 'max_dpd_bfi', type: 'number',
-                    labelEng: 'Max Days Past Due (BFI Loan)',
-                    labelNep: 'BFI ऋणमा अधिकतम विलम्बित दिन',
-                    min: 0, placeholder: 'e.g., 0',
-                    hint: 'Enter 0 if no overdue payments on BFI loans'
                 }
             ]
         },
 
-        // ── Section 15: Behavioral & Community ────────────────────────────────
+        // ── Section 14: Credit History — BFI (S.N 111–112) ───────────────────
+        {
+            id: 'section_14',
+            title: 'Credit History — BFI',
+            icon: 'globe',
+            subtitle: 'बैंक तथा वित्त संस्थासँगको कर्जा इतिहास',
+            questions: [
+                {
+                    // S.N 111
+                    id: 'credit_history_bfi', type: 'select',
+                    labelEng: 'Credit History BFIs — cooperative credit history?',
+                    labelNep: 'Credit History BFIs (सहकारीको क्रेडिट इतिहास कस्तो छ?)',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Pass', label: 'Pass / उत्तीर्ण' },
+                        { value: 'Watch List', label: 'Watch List / निगरानी सूची' },
+                        { value: 'Substandard', label: 'Substandard / मापदण्डभन्दा कमजोर' },
+                        { value: 'Doubtful', label: 'Doubtful / शंकास्पद' },
+                        { value: 'Loss', label: 'Loss / घाटा' }
+                    ]
+                },
+                {
+                    // S.N 112
+                    id: 'max_dpd_bfi', type: 'number',
+                    labelEng: 'Maximum DPD days in bank loan?',
+                    labelNep: 'सहकारीको सबैभन्दा बढी ढिला भएको दिन कति हो?',
+                    min: 0, placeholder: 'e.g., 0',
+                    hint: 'Enter 0 if no overdue payments on bank loans'
+                }
+            ]
+        },
+
+        // ── Section 15: Behavioral & Community (S.N 113–120) ─────────────────
         {
             id: 'section_15',
             title: 'Behavioral & Community',
             icon: 'heart',
-            subtitle: 'Community engagement and operational readiness',
+            subtitle: 'व्यवहार र सामुदायिक सहभागिता',
             questions: [
                 {
+                    // S.N 113
+                    id: 'meeting_frequency', type: 'select',
+                    labelEng: 'How often does the committee usually hold meetings?',
+                    labelNep: 'समितिको बैठक प्रायः कति नियमिततामा हुने गर्छ?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Weekly', label: 'Weekly / साप्ताहिक' },
+                        { value: 'Monthly', label: 'Monthly / मासिक' },
+                        { value: 'Bi-Weekly', label: 'Quarterly / त्रैमासिक' },
+                        { value: 'Rarely', label: 'Annually / वार्षिक' }
+                    ]
+                },
+                {
+                    // S.N 114
+                    id: 'member_info_transparency', type: 'select',
+                    labelEng: 'When a new plan or spending comes up, are members informed or decided among a few?',
+                    labelNep: 'जब नयाँ योजना वा पैसा खर्च हुने कुरा आउँछ, सबै सदस्यलाई कुरा बुझाइन्छ कि भित्रै मात्र निर्णय हुन्छ?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Decided among few', label: 'Decided among few / सीमित व्यक्तिहरूले निर्णय गर्ने' },
+                        { value: 'Sometimes', label: 'Sometimes / कहिलेकाहीँ' },
+                        { value: 'Mostly', label: 'Mostly / प्रायः' },
+                        { value: 'Always', label: 'Always / सधैं' }
+                    ]
+                },
+                {
+                    // S.N 115
+                    id: 'fund_usage', type: 'select',
+                    labelEng: 'Last year, where did the cooperative spend most of its money?',
+                    labelNep: 'पछिल्लो वर्ष सहकारीले सबैभन्दा बढी पैसा कुन काममा खर्च गर्यो?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Buying Milk', label: 'Buying Milk / दूध खरिद' },
+                        { value: 'Processing', label: 'Processing / प्रशोधन' },
+                        { value: 'Members', label: 'Members / सदस्यहरू' },
+                        { value: 'Other things', label: 'Other things / अन्य कार्यहरू' }
+                    ]
+                },
+                {
+                    // S.N 116
+                    id: 'kyc_aml', type: 'select',
+                    labelEng: 'Are all member records (name, address, amount) kept securely?',
+                    labelNep: 'सदस्यहरूको सबै विवरण (नाम, ठेगाना, रकम) सही तरिकाले सुरक्षित राखिएको छ कि छैन?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Hard', label: 'Hard / गाह्रो' },
+                        { value: 'Sometimes', label: 'Sometimes / कहिलेकाहीँ' },
+                        { value: 'Mostly', label: 'Mostly / प्रायः' },
+                        { value: 'Easily Found', label: 'Easily Found / सजिलै उपलब्ध' }
+                    ]
+                },
+                {
+                    // S.N 117
+                    id: 'income_expense_checked', type: 'select',
+                    labelEng: 'Did anyone check the cooperative\'s income and expenses last year?',
+                    labelNep: 'पछिल्लो वर्ष सहकारीको आम्दानी र खर्च कसैले जाँच गर्यो?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Never', label: 'Never / कहिल्यै होइन' },
+                        { value: 'Once', label: 'Once / एक पटक' },
+                        { value: 'Occasionally', label: 'Occasionally / बेलाबेला' },
+                        { value: 'Regularly', label: 'Regularly / नियमित रूपमा' }
+                    ]
+                },
+                {
+                    // S.N 118
+                    id: 'right_to_information', type: 'select',
+                    labelEng: 'When any new plan or rule is implemented, are members informed beforehand?',
+                    labelNep: 'कुनै पनि नयाँ योजना वा नियम लागू हुँदा, यसको बारेमा सदस्यलाई पहिले सूचित गरिन्छ कि गरिंदैन?',
+                    options: [
+                        { value: '', label: 'Select' },
+                        { value: 'Only after implementation', label: 'Only after implementation / कार्यान्वयन पछि मात्र' },
+                        { value: 'Sometimes beforehand', label: 'Sometimes beforehand / कहिलेकाहीँ पहिले' },
+                        { value: 'Mostly Beforehand', label: 'Mostly Beforehand / प्रायः पहिले' },
+                        { value: 'Always Beforehand', label: 'Always Beforehand / सधैं पहिले' }
+                    ]
+                },
+                {
+                    // S.N 119
                     id: 'community_support_level', type: 'select',
-                    labelEng: 'Community Support Level',
-                    labelNep: 'सामुदायिक सहयोगको स्तर',
+                    labelEng: 'What did the cooperative help with in the village last year?',
+                    labelNep: 'पछिल्लो साल सहकारीले गाउँमा के सहयोग गरेको थियो?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Significant', label: 'Significant — उच्च' },
-                        { value: 'Moderate', label: 'Moderate — मध्यम' },
-                        { value: 'Minimal', label: 'Minimal — न्यून' }
+                        { value: 'Minimal', label: 'Never / कहिल्यै होइन' },
+                        { value: 'Moderate', label: 'Sometimes / कहिलेकाहीँ' },
+                        { value: 'Significant', label: 'Frequently / बारम्बार' }
                     ]
                 },
                 {
+                    // S.N 120
                     id: 'emergency_response', type: 'select',
-                    labelEng: 'Emergency Response Plan',
-                    labelNep: 'आपतकालीन प्रतिक्रिया योजना',
+                    labelEng: 'When milk is low or emergencies happen, what does the cooperative usually do?',
+                    labelNep: 'जब दूध कम हुन्छ वा आपत आउँछ, सहकारी प्रायः के गर्छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Proper Plan', label: 'Proper Plan — उचित योजना' },
-                        { value: 'Ad-hoc', label: 'Ad-hoc — तत्कालीन' },
-                        { value: 'No Plan', label: 'No Plan — योजना छैन' }
-                    ]
-                },
-                {
-                    id: 'farmer_training_freq', type: 'select',
-                    labelEng: 'Farmer Training Frequency',
-                    labelNep: 'किसान तालिमको आवृत्ति',
-                    options: [
-                        { value: '', label: 'Select' },
-                        { value: 'Quarterly', label: 'Quarterly — त्रैमासिक' },
-                        { value: 'Annually', label: 'Annually — वार्षिक' },
-                        { value: 'Rarely', label: 'Rarely — कहिलेकाहीँ' }
+                        { value: 'No Plan', label: 'Nothing / केही पनि होइन' },
+                        { value: 'Ad-hoc', label: 'Little Preparation / थोरै तयारी' },
+                        { value: 'Moderate', label: 'Normal / सामान्य' },
+                        { value: 'Proper Plan', label: 'Proper Plan / उचित योजना' }
                     ]
                 }
             ]

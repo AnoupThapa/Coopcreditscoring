@@ -1,24 +1,142 @@
 /**
  * admin/js/submissions.js
  *
- * KEY FIX: mapSubmissionFromGAS now calls runScoringEngine(answers) to rebuild
- * the full result object (categories, strengths, weaknesses, focus, metrics)
- * from the saved Answers JSON — these are never stored in the sheet.
- *
- * Requires admin/js/engine.js to be loaded before this file.
+ * CACHE LAYER ADDED:
+ *   - On first load, submissions are fetched from GAS and cached in localStorage
+ *   - On subsequent logins, cached data is loaded instantly (no network wait)
+ *   - Cache is invalidated after 30 minutes (CACHE_TTL_MS)
+ *   - Cache is force-refreshed when admin clicks the refresh button
+ *   - Cache is updated in-memory when an approver decision is saved
+ *   - Cache key: 'admin_submissions_cache'
+ *   - Cache structure: { ts: <unix ms>, data: [ ...raw rows ] }
  */
 
 window._adminSubmissions = [];
 
-// ── Fetch from GAS ────────────────────────────────────────────────────────────
+const CACHE_KEY    = 'admin_submissions_cache';
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-async function fetchSubmissions() {
+// ── Cache helpers ─────────────────────────────────────────────────────────────
+
+function _readCache() {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.ts || !Array.isArray(parsed.data)) return null;
+        return parsed;
+    } catch (e) { return null; }
+}
+
+function _writeCache(rawRows) {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            ts:   Date.now(),
+            data: rawRows
+        }));
+    } catch (e) {
+        console.warn('[submissions] Could not write cache:', e.message);
+    }
+}
+
+function _clearCache() {
+    localStorage.removeItem(CACHE_KEY);
+}
+
+function _isCacheValid(cache) {
+    if (!cache) return false;
+    return (Date.now() - cache.ts) < CACHE_TTL_MS;
+}
+
+function _cacheAgeLabel(cache) {
+    if (!cache) return '';
+    const mins = Math.round((Date.now() - cache.ts) / 60000);
+    if (mins < 1) return 'just now';
+    if (mins === 1) return '1 min ago';
+    return mins + ' mins ago';
+}
+
+// ── Fetch from GAS (or cache) ─────────────────────────────────────────────────
+
+/**
+ * Lightweight server ping — fetches only the submission count + latest
+ * submission timestamp from GAS (action=getSubmissionMeta).
+ * Returns { count, latestTs } or null on failure.
+ *
+ * GAS must handle:  ?action=getSubmissionMeta  →  { count: N, latestTs: "ISO" }
+ */
+async function _fetchSubmissionMeta(url) {
+    try {
+        const res = await fetch(url + '?action=getSubmissionMeta', { redirect: 'follow' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data && typeof data.count === 'number') return data;
+        return null;
+    } catch (e) {
+        console.warn('[submissions] meta ping failed:', e.message);
+        return null;
+    }
+}
+
+/**
+ * Check whether cached data is still in sync with the server.
+ * Returns true  → cache is fresh AND matches server count.
+ * Returns false → cache is stale by TTL, or count/latestTs differs.
+ */
+async function _isCacheStillValid(cache, url) {
+    if (!_isCacheValid(cache)) return false;          // expired by TTL
+
+    const meta = await _fetchSubmissionMeta(url);
+    if (!meta) return true;                           // meta ping failed → keep cache, don't hammer server
+
+    const cachedCount = cache.data.length;
+    if (meta.count !== cachedCount) {
+        console.log('[submissions] Server count (' + meta.count + ') ≠ cache (' + cachedCount + ') — invalidating cache.');
+        return false;
+    }
+
+    // If server provides latestTs, check it against the newest cached timestamp
+    if (meta.latestTs) {
+        const serverTs  = new Date(meta.latestTs).getTime();
+        const cachedTs  = cache.data.reduce(function(max, row) {
+            const t = new Date(row['Submission Timestamp'] || row['Server Timestamp'] || 0).getTime();
+            return t > max ? t : max;
+        }, 0);
+        if (serverTs > cachedTs) {
+            console.log('[submissions] Newer submission detected on server — invalidating cache.');
+            return false;
+        }
+    }
+
+    return true;  // count matches and no newer ts → cache is good
+}
+
+async function fetchSubmissions(forceRefresh) {
     const url = typeof ADMIN_GAS_URL !== 'undefined' ? ADMIN_GAS_URL : '';
     if (!url) {
         console.warn('ADMIN_GAS_URL not defined — skipping server fetch.');
         return [];
     }
 
+    // Try serving from cache first (unless force-refreshed).
+    // Smart check: even if TTL hasn't expired, ping server for count/latestTs.
+    if (!forceRefresh) {
+        const cache = _readCache();
+        if (cache && cache.data && cache.data.length > 0) {
+            const stillValid = await _isCacheStillValid(cache, url);
+            if (stillValid) {
+                console.log('[submissions] Serving from cache (' + _cacheAgeLabel(cache) + ')');
+                window._adminSubmissions = cache.data.map(mapSubmissionFromGAS);
+                _renderCacheBanner(_cacheAgeLabel(cache), false);
+                return window._adminSubmissions;
+            }
+            // Cache invalidated — fall through to full fetch
+            _clearCache();
+            console.log('[submissions] Cache invalidated — fetching fresh data.');
+        }
+    }
+
+    // Show loading state in table
     const tbody = document.getElementById('sub_table_body');
     if (tbody) {
         tbody.innerHTML = `
@@ -62,13 +180,29 @@ async function fetchSubmissions() {
             throw new Error('Unexpected response format. Got: ' + JSON.stringify(data).slice(0, 200));
         }
 
+        // Write raw rows to cache before mapping
+        _writeCache(data);
+
         window._adminSubmissions = data.map(mapSubmissionFromGAS);
 
-        if (typeof loadDashboard === 'function') loadDashboard();
+        _renderCacheBanner('just now', true);
         return window._adminSubmissions;
 
     } catch (err) {
         console.error('fetchSubmissions error:', err);
+
+        // If network fails, fall back to stale cache rather than showing nothing
+        const staleCache = _readCache();
+        if (staleCache && staleCache.data.length > 0) {
+            console.warn('[submissions] Network failed — using stale cache (' + _cacheAgeLabel(staleCache) + ')');
+            window._adminSubmissions = staleCache.data.map(mapSubmissionFromGAS);
+            _renderCacheBanner(_cacheAgeLabel(staleCache), false, true);
+            if (typeof showAdminToast === 'function') {
+                showAdminToast('Showing cached data — could not reach server.', 'warning');
+            }
+            return window._adminSubmissions;
+        }
+
         if (typeof showAdminToast === 'function') {
             showAdminToast('Failed to load submissions: ' + err.message, 'error');
         }
@@ -87,10 +221,82 @@ async function fetchSubmissions() {
     }
 }
 
+// ── Cache banner ──────────────────────────────────────────────────────────────
+
+/**
+ * Renders a small banner above the submissions toolbar showing cache status
+ * and a Refresh button to force a fresh fetch from GAS.
+ */
+function _renderCacheBanner(ageLabel, isLive, isStale) {
+    const view = document.getElementById('view_submissions');
+    if (!view) return;
+
+    // Remove existing banner
+    const existing = document.getElementById('_sub_cache_banner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = '_sub_cache_banner';
+
+    const color  = isStale ? '#92400e' : isLive ? '#14532d' : '#1e3a6e';
+    const bg     = isStale ? '#fffbeb' : isLive ? '#f0fdf4' : '#eff6ff';
+    const border = isStale ? '#fde68a' : isLive ? '#bbf7d0' : '#bfdbfe';
+    const icon   = isStale ? '⚠' : isLive ? '✓' : '💾';
+    const label  = isStale
+        ? 'Cached data (' + ageLabel + ') — server unreachable'
+        : isLive
+            ? 'Loaded from server — ' + ageLabel
+            : 'If no new data found, click refresh — Refreshed ' + ageLabel ;
+
+    banner.style.cssText = [
+        'display:flex', 'align-items:center', 'gap:10px',
+        'padding:8px 14px', 'margin-bottom:10px',
+        'border-radius:8px', 'border:1px solid ' + border,
+        'background:' + bg, 'color:' + color,
+        'font-size:12px', 'font-weight:500',
+        'font-family:DM Sans,system-ui,sans-serif'
+    ].join(';');
+
+    banner.innerHTML = `
+        <span style="flex-shrink:0">${icon}</span>
+        <span style="flex:1">${label}</span>
+        <button onclick="refreshSubmissions()" style="
+            padding:4px 12px; border-radius:5px; border:1px solid ${border};
+            background:transparent; cursor:pointer; font-family:inherit;
+            font-size:11px; font-weight:700; color:${color};
+            display:inline-flex; align-items:center; gap:5px;
+        ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
+            </svg>
+            Refresh
+        </button>
+    `;
+
+    // Insert before the toolbar
+    const toolbar = view.querySelector('.sub-toolbar');
+    if (toolbar) {
+        view.insertBefore(banner, toolbar);
+    } else {
+        view.prepend(banner);
+    }
+}
+
+/**
+ * Force-refresh submissions from GAS, bypassing the cache.
+ * Called by the Refresh button in the cache banner.
+ */
+async function refreshSubmissions() {
+    _clearCache();
+    await fetchSubmissions(true);
+    if (typeof initSubmissionsView === 'function') initSubmissionsView();
+    if (typeof showAdminToast === 'function') showAdminToast('Submissions refreshed from server.', 'success');
+}
+
 // ── Map GAS row → submission object ──────────────────────────────────────────
 
 function mapSubmissionFromGAS(raw) {
-    // Parse Answers JSON
     const answersStr = raw['Answers JSON'] || '{}';
     const answers = (function () {
         try {
@@ -101,24 +307,23 @@ function mapSubmissionFromGAS(raw) {
         return {};
     })();
 
-    // Stable synthetic ID from timestamp + coop name
     const tsRaw   = raw['Submission Timestamp'] || raw['Server Timestamp'] || '';
     const coopRaw = raw['Coop Name'] || answers.coop_name || '';
-    const syntheticId = (String(tsRaw) + String(coopRaw))
-        .replace(/[^a-z0-9]/gi, '').toLowerCase()
+
+    // Use Submission ID from sheet if present (guaranteed unique)
+    // Fall back to timestamp+coop+random suffix to avoid collisions
+    const sheetId = raw['Submission ID'] ? String(raw['Submission ID']).trim() : '';
+    const syntheticId = sheetId
+        || ((String(tsRaw) + String(coopRaw)).replace(/[^a-z0-9]/gi, '').toLowerCase()
+            + '_' + Math.random().toString(36).slice(2, 7))
         || ('sub_' + Math.random().toString(36).slice(2));
 
-    // Approver status
     let approverStatus = String(raw['Approver Status'] || '').trim().toLowerCase();
     if (!approverStatus) approverStatus = 'pending';
 
-    // Score from sheet
     const score = raw['Total Score'] !== '' && raw['Total Score'] != null
         ? Number(raw['Total Score']) : 0;
 
-    // ── RE-RUN SCORING ENGINE from saved answers ──────────────────────────────
-    // Rebuilds: categories, strengths, weaknesses, focus, metrics, data
-    // These are computed client-side and never saved to the sheet.
     let result = {};
     if (typeof runScoringEngine === 'function' && answers && Object.keys(answers).length > 0) {
         try {
@@ -127,10 +332,9 @@ function mapSubmissionFromGAS(raw) {
             console.warn('[mapSubmissionFromGAS] Engine error for "' + coopRaw + '":', e.message);
         }
     } else if (typeof runScoringEngine !== 'function') {
-        console.error('[mapSubmissionFromGAS] runScoringEngine not found — is engine.js loaded before submissions.js in admin.html?');
+        console.error('[mapSubmissionFromGAS] runScoringEngine not found — is engine.js loaded before submissions.js?');
     }
 
-    // Determine modelType from answers
     const modelType = (function () {
         const mt = String(answers.model_type || '').toLowerCase();
         if (mt.includes('processing') || mt.includes('model b')) return 'processing';
@@ -139,6 +343,7 @@ function mapSubmissionFromGAS(raw) {
 
     return {
         id:                syntheticId,
+        submissionId:      sheetId || syntheticId,   // the exact Submission ID from sheet
         coopName:          raw['Coop Name']            || answers.coop_name || 'Unknown',
         submittedAt:       raw['Submission Timestamp'] || raw['Server Timestamp'] || new Date().toISOString(),
         score:             isNaN(score) ? (result.totalScore || 0) : score,
@@ -149,7 +354,7 @@ function mapSubmissionFromGAS(raw) {
         modelType:         modelType,
         customerType:      answers.customer_type       || 'new',
         answers:           answers,
-        result:            result,   // ← now fully populated with categories etc.
+        result:            result,
         _raw:              raw
     };
 }
@@ -208,7 +413,7 @@ function renderSubmissionsTable(filter, riskFilter) {
             : '—';
         const score      = sub.score != null ? sub.score : '—';
         const scoreColor = getScoreColor(sub.score || 0);
-        const shortId    = (sub.id || '').toString().slice(-6);
+        const shortId    = sub.submissionId || (sub.id || '').toString().slice(-8);
         const modelLabel = sub.modelType === 'processing' ? 'Processing' : 'Collection';
 
         return `
@@ -281,6 +486,10 @@ function openSubmission(id) {
 
 function initSubmissionsView() {
     renderSubmissionsTable();
+
+    // Re-render the cache banner if cache exists
+    const cache = _readCache();
+    if (cache) _renderCacheBanner(_cacheAgeLabel(cache), false, !_isCacheValid(cache));
 
     const searchInput = document.getElementById('sub_search');
     const riskSelect  = document.getElementById('sub_risk_filter');

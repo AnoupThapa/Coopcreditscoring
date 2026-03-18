@@ -474,8 +474,12 @@ function runModel(calc, data) {
         auditFreqMap[data.income_expense_checked]!==undefined?auditFreqMap[data.income_expense_checked]:0,
         25,'Audit Regularity',data.income_expense_checked||'N/A');
 
-    // Assemble
-    const categories = Object.entries(catMap).map(([name, d]) => ({
+    // Assemble — exclude 'Security' from displayed categories
+    // Collateral score still contributes to totalScore but not shown as a category card
+    const HIDDEN_CATEGORIES = new Set(['Security']);
+    const categories = Object.entries(catMap)
+        .filter(([name]) => !HIDDEN_CATEGORIES.has(name))
+        .map(([name, d]) => ({
         name,
         score: Math.round(d.score),
         max: d.max,
