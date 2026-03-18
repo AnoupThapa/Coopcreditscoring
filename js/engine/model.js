@@ -73,12 +73,11 @@ function runModel(calc, data) {
         invD >= 60 ? 30 : invD >= 90 ? 24 : invD >= 120 ? 18 : invD >= 180 ? 10 : 0,
         30, '(Avg Inventory / COGS) × 365', Math.round(invD) + ' days');
 
-    // 1d. Receivable Days — 40 pts
-    // Sheet: IF(>=30,40, IF(>=45,32, IF(>=60,24, IF(>=90,12,0))))
-    // Higher = longer credit terms given to farmers = scored positively
+    // 1d. Receivable Days — 40 pts  (lower = better = faster payment from buyers)
+    // Sheet: IF(>=90,0, IF(>=60,12, IF(>=45,24, IF(>=30,32, 40))))
     const recD = calc.receivable_days;
     add(CAT1, 'Receivable Days',
-        recD >= 30 ? 40 : recD >= 45 ? 32 : recD >= 60 ? 24 : recD >= 90 ? 12 : 0,
+        recD >= 90 ? 0 : recD >= 60 ? 12 : recD >= 45 ? 24 : recD >= 30 ? 32 : 40,
         40, '(Accounts Receivable / Total Revenue) × 365', Math.round(recD) + ' days');
 
     // ── 2. MILK SUPPLY & OPERATIONAL STABILITY (150 pts) ─────────────────────
@@ -135,11 +134,12 @@ function runModel(calc, data) {
     const CAT3 = 'Financial Strength & Liquidity';
 
     // 3a. Net Worth — 40 pts
-    // Sheet: IF(netWorth > totalLoan, 40, IF(netWorth = totalLoan×20, 30, 15))
+    // Sheet: IF(netWorth > (Data!D5+Data!D6)*2, 40, IF(> (D5+D6), 30, IF(>0, 15, 0)))
+    // Data!D5=existing_loan_amt, Data!D6=proposed_loan_amt → total_loan
     const nw    = calc.net_worth;
     const tLoan = data.total_loan;
     add(CAT3, 'Net Worth',
-        nw > tLoan ? 40 : nw > tLoan * 0.5 ? 30 : 15,
+        nw > tLoan * 2 ? 40 : nw > tLoan ? 30 : nw > 0 ? 15 : 0,
         40, 'Total Assets − Total Liabilities vs Total Loan', fmtNPR(nw));
 
     // 3b. Debt / Equity — 40 pts
@@ -216,9 +216,11 @@ function runModel(calc, data) {
         25, 'Internal Control Assessment', ic || 'N/A');
 
     // 6c. Audit Findings — 25 pts
-    const af = calc.audit_findings;  // 'None' / 'Few' (dropdown)
+    // Sheet: "None"→25, "Few"→15, "Qualified"→0
+    const af = calc.audit_findings;  // 'None' / 'Few' / 'Qualified'
     add(CAT6, 'Audit Findings',
-        af === 'None' || af === '0' ? 25 : af === 'Few' || af === '1' ? 15 : 0,
+        af === 'None' || af === '0' || af === 'none' ? 25
+        : af === 'Few'  || af === '1' || af === 'few'  ? 15 : 0,
         25, 'Number of Audit Observations', af || 'N/A');
 
     // 6d. Lending Policy Compliance — 25 pts
@@ -230,10 +232,18 @@ function runModel(calc, data) {
     const CAT7 = 'Operational Quality';
 
     // 7a. Quality SOP Compliance — 40 pts
-    const sopNum = calc.quality_sop_numeric;  // 9 / 6 / 1.5
+    // Sheet: string match on full SOP dropdown value
+    // "Standards and documents exist. मापदण्ड र दस्तावेज छन्" → 40
+    // "Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन" → 30
+    // "No standards (मापदण्ड छैन) ..." → 20, else 0
+    const sop = calc.quality_sop_numeric;  // passed through from data.quality_sop_score_model_b
+    const sopStr = String(sop || '');
+    const sopScore = sopStr.includes('Standards and documents exist') ? 40
+        : sopStr.includes('Standards exist, no documents') ? 30
+        : sopStr.includes('No standards') ? 20 : 0;
     add(CAT7, 'Quality SOP Compliance',
-        sopNum >= 9 ? 40 : sopNum >= 7 ? 30 : sopNum >= 5 ? 20 : sopNum >= 3 ? 10 : 0,
-        40, 'Milk Collection / Handling Standards & Documentation', sopNum + '/10');
+        sopScore,
+        40, 'Milk Collection / Handling Standards & Documentation', sopStr || 'N/A');
 
     // ── 8. EXTERNAL & REGULATORY RISK (40 pts) ───────────────────────────────
     const CAT8 = 'External & Regulatory Risk';
@@ -244,8 +254,10 @@ function runModel(calc, data) {
         10, 'Insurance Available', calc.insurance_coverage || 'No');
 
     // 8b. Regulatory Compliance — 15 pts
+    // Sheet: IF("Full",15, IF("Partial",5, 0))
+    // DropdownOptions confirms form value is "Full" not "Yes"
     add(CAT8, 'Regulatory Compliance',
-        calc.regulatory_compliance === 'Yes' ? 15 : calc.regulatory_compliance === 'Partial' ? 5 : 0,
+        calc.regulatory_compliance === 'Full' ? 15 : calc.regulatory_compliance === 'Partial' ? 5 : 0,
         15, 'Darta, Tax, NRB Reporting Compliance', calc.regulatory_compliance || 'No');
 
     // 8c. Climatic Risk — 15 pts
@@ -313,11 +325,13 @@ function runModel(calc, data) {
     const CAT11 = 'Behavioural & Due Diligence Risk';
 
     // 11a. Committee Meeting Frequency — 5 pts
+    // Sheet: "Weekly"→5, "Monthly"→2.5, "Quarterly"→1.5, "Annually"→1
+    // DropdownOptions: Weekly / Monthly / Quarterly / Annually
     add(CAT11, 'Committee Meeting Frequency',
-        calc.meeting_frequency === 'Weekly'   ? 5
-        : calc.meeting_frequency === 'Monthly'  ? 2.5
-        : calc.meeting_frequency === 'Bi-Weekly'? 1.5
-        : calc.meeting_frequency === 'Rarely'   ? 1 : 0,
+        calc.meeting_frequency === 'Weekly'    ? 5
+        : calc.meeting_frequency === 'Monthly'   ? 2.5
+        : calc.meeting_frequency === 'Quarterly' ? 1.5
+        : calc.meeting_frequency === 'Annually'  ? 1 : 0,
         5, 'Committee Meeting Regularity', calc.meeting_frequency || 'N/A');
 
     // 11b. Member Info Transparency — 5 pts
@@ -329,11 +343,16 @@ function runModel(calc, data) {
         5, 'Transparency with Members on Plans', calc.member_transparency || 'N/A');
 
     // 11c. Fund Utilization Transparency — 5 pts
+    // Sheet: "Buying milk"→5, "Processing"→2.5, "members"→1.5, "1 area covered"→1
+    // DropdownOptions: "Buying Milk" / "Processing" / "Members" / "Other things"
+    // Data sheet stores the form value; Data!D69=fund_usage. Model checks fund_utilization.
+    // Use case-insensitive contains check to handle both sheet and portal values
+    const fu = (calc.fund_utilization || '').toLowerCase();
     add(CAT11, 'Fund Utilization Transparency',
-        calc.fund_utilization === 'Buying Milk' ? 5
-        : calc.fund_utilization === 'Processing'? 2.5
-        : calc.fund_utilization === 'Members'   ? 1.5
-        : calc.fund_utilization === 'Other things' ? 1 : 0,
+        fu.includes('buying') || fu.includes('milk') ? 5
+        : fu === 'processing' ? 2.5
+        : fu === 'members' ? 1.5
+        : fu.includes('other') || fu.includes('1 area') ? 1 : 0,
         5, 'Primary Fund Usage Category', calc.fund_utilization || 'N/A');
 
     // 11d. Member Identification & KYC Compliance — 5 pts
@@ -353,26 +372,35 @@ function runModel(calc, data) {
         5, 'Income/Expense Verification Frequency', calc.financial_oversight || 'N/A');
 
     // 11f. Governance Communication Effectiveness — 5 pts
+    // Sheet: "Always beforehand"→5, "Mostly beforehand"→2.5, "Sometimes beforehand"→1.5
+    //        "Only after implementation"→1
+    // DropdownOptions: "Always Beforehand" / "Mostly Beforehand" / "Sometimes beforehand"
+    //                  / "Only after implementation"
+    const gc = (calc.governance_communication || '').toLowerCase();
     add(CAT11, 'Governance Communication',
-        calc.governance_communication === 'Always Beforehand'    ? 5
-        : calc.governance_communication === 'Mostly Beforehand'  ? 2.5
-        : calc.governance_communication === 'Sometimes beforehand' ? 1.5
-        : calc.governance_communication === 'Only after implementation' ? 1 : 0,
+        gc.startsWith('always') ? 5
+        : gc.startsWith('mostly') ? 2.5
+        : gc.startsWith('sometimes') ? 1.5
+        : gc.startsWith('only after') ? 1 : 0,
         5, 'Member Notification Before New Rules', calc.governance_communication || 'N/A');
 
     // 11g. Stakeholder Engagement & Social Responsibility — 5 pts
+    // Sheet: "Frequently"→5, "Sometimes"→2.5, "Never"→1.5
+    // DropdownOptions: "Frequently" / "Sometimes" / "Never"
     add(CAT11, 'Stakeholder Engagement',
-        calc.stakeholder_engagement === 'Significant' ? 5
-        : calc.stakeholder_engagement === 'Moderate'  ? 2.5
-        : calc.stakeholder_engagement === 'Minimal'   ? 1.5 : 0,
+        calc.stakeholder_engagement === 'Frequently' ? 5
+        : calc.stakeholder_engagement === 'Sometimes' ? 2.5
+        : calc.stakeholder_engagement === 'Never'     ? 1.5 : 0,
         5, 'Community Support Level', calc.stakeholder_engagement || 'N/A');
 
     // 11h. Operational Contingency Preparedness — 5 pts
+    // Sheet: "Proper Plan"→5, "Normal"→2.5, "Little Preparation"→1.5, "Nothing"→0
+    // DropdownOptions: "Proper Plan" / "Normal" / "Little Preparation" / "Nothing"
     add(CAT11, 'Emergency Preparedness',
-        calc.emergency_preparedness === 'Proper Plan'     ? 5
-        : calc.emergency_preparedness === 'Moderate'      ? 2.5
-        : calc.emergency_preparedness === 'Ad-hoc'        ? 1.5
-        : calc.emergency_preparedness === 'No Plan'       ? 0 : 0,
+        calc.emergency_preparedness === 'Proper Plan'        ? 5
+        : calc.emergency_preparedness === 'Normal'           ? 2.5
+        : calc.emergency_preparedness === 'Little Preparation' ? 1.5
+        : calc.emergency_preparedness === 'Nothing'          ? 0 : 0,
         5, 'Emergency / Low-Milk Response Plan', calc.emergency_preparedness || 'N/A');
 
     // ─────────────────────────────────────────────────────────────────────────

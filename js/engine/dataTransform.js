@@ -85,11 +85,18 @@ function transformData(rawInputs) {
     const rent_expense            = n('rent_expense');
     const other_operating_expense = n('other_operating_expense');
 
-    // S.N 44: auto-calculated total operating expenses
-    const total_opex = raw_milk_purchase_cost + processing_cost + packaging_cost +
-                       transport_cost + other_processing_cost + salary_expense +
-                       admin_expense + electricity_expense + fuel_expense +
-                       maintenance_expense + rent_expense + other_operating_expense;
+    // S.N 44: auto-calculated total operating expenses (overhead only)
+    // Sheet formula: =E38+E39+E40+E41+E42+E43+E44
+    // = salary + admin + electricity + fuel + maintenance + rent + other_operating
+    // Does NOT include: raw_milk_purchase_cost, processing_cost, packaging_cost,
+    //                   transport_cost, other_processing_cost
+    const total_opex = salary_expense + admin_expense + electricity_expense +
+                       fuel_expense + maintenance_expense + rent_expense +
+                       other_operating_expense;
+
+    // COGS = processing costs only (sheet Data!D19 = SUM(Questions!D34:D37))
+    // = processing + packaging + transport + other_processing_cost
+    const cogs = processing_cost + packaging_cost + transport_cost + other_processing_cost;
 
     // S.N 45: lean month expense = total_opex / 12  (auto, no user input)
     const lean_month_expense = total_opex / 12;
@@ -97,8 +104,11 @@ function transformData(rawInputs) {
     const depreciation = n('depreciation');
     const amortization = n('amortization');
 
-    // EBITDA = total_revenue - total_opex + depreciation + amortization
-    const ebitda = total_revenue - total_opex + depreciation + amortization;
+    // EBITDA = total_revenue - COGS - total_opex
+    // Sheet formula: =Questions!D18 - SUM(Questions!D34:D37) - Questions!D45
+    // = total_revenue - (processing+packaging+transport+other_proc) - overhead_opex
+    // No depreciation/amortization addback per sheet
+    const ebitda = total_revenue - cogs - total_opex;
 
     // ── S.N 48–63: Assets ─────────────────────────────────────────────────────
     const cash_on_hand        = n('cash_on_hand');
@@ -161,14 +171,19 @@ function transformData(rawInputs) {
     const milk_loss_liters_during_collection = n('milk_loss_liters_during_collection');
     const loss_during_process                = n('loss_during_process');
 
-    // S.N 80 auto: total milk sold = collected - loss_collection - loss_process
+    // Total milk loss = collection loss + processing loss (sheet Data!D24 = D79+D80)
+    const total_milk_loss = milk_loss_liters_during_collection + loss_during_process;
+
+    // S.N 80 auto: produced milk = total collected - collection loss ONLY
+    // Sheet Data!D25 = Questions!D78 - Questions!D79 (NOT minus process loss)
     const produced_milk_model_b_liters = Math.max(
         0,
-        total_milk_collected_liters - milk_loss_liters_during_collection - loss_during_process
+        total_milk_collected_liters - milk_loss_liters_during_collection
     );
 
-    const avg_monthly_milk_liters     = n('avg_monthly_milk_liters')
-        || (total_milk_collected_liters / 12);
+    // S.N 81 auto: avg monthly milk = total / 12 (always auto-calculated, sheet =E81/12)
+    const avg_monthly_milk_liters = total_milk_collected_liters / 12;
+
     const lowest_monthly_milk_liters  = n('lowest_monthly_milk_liters');
     const highest_monthly_milk_liters = n('highest_monthly_milk_liters');
     const average_inventory           = n('average_inventory');
@@ -182,6 +197,10 @@ function transformData(rawInputs) {
     // S.N 90 auto: average milk per farmer
     const avg_farmer_quantity_liters = total_number_of_farmers > 0
         ? total_milk_collected_liters / total_number_of_farmers : 0;
+
+    // Collection Days Category (sheet Data!D36): IF(days>325,"High",IF(>300,"Medium","Low"))
+    const collection_days_category = collection_days_positive > 325 ? 'High'
+        : collection_days_positive > 300 ? 'Medium' : 'Low';
 
     // ── S.N 92–97: Loan Recovery & NPA ───────────────────────────────────────
     const total_member_loans      = n('total_member_loans');
@@ -235,11 +254,10 @@ function transformData(rawInputs) {
     const emergency_response        = s('emergency_response');
 
     // ── Loan repayment computation (for DSCR) ────────────────────────────────
-    // Annual principal = proposed_loan / (tenure_months / 12)
-    const annual_principal = loan_tenure_months > 0
-        ? proposed_loan_amt / (loan_tenure_months / 12) : 0;
-    // Annual interest = proposed_loan * (rate / 100)
-    const annual_interest  = proposed_loan_amt * (interest_rate / 100);
+    // Sheet Data!D8 Principal = Questions!D68 = current_portion_long_term_debt
+    const annual_principal = current_portion_long_term_debt;
+    // Sheet Data!D9 Interest = Questions!D9 * Questions!D10 = interest_rate * loan_tenure_months
+    const annual_interest  = interest_rate * loan_tenure_months;
 
     return {
         // Identity
@@ -265,7 +283,7 @@ function transformData(rawInputs) {
         raw_milk_purchase_cost, processing_cost, packaging_cost, transport_cost,
         other_processing_cost, salary_expense, admin_expense, electricity_expense,
         fuel_expense, maintenance_expense, rent_expense, other_operating_expense,
-        total_opex, lean_month_expense, depreciation, amortization, ebitda,
+        total_opex, cogs, lean_month_expense, depreciation, amortization, ebitda,
 
         // Assets (with auto-calc totals)
         cash_on_hand, bank_balance, total_cash,
@@ -286,11 +304,12 @@ function transformData(rawInputs) {
 
         // Milk (with auto-calc totals)
         total_milk_collected_liters, milk_loss_liters_during_collection, loss_during_process,
-        produced_milk_model_b_liters,
+        total_milk_loss, produced_milk_model_b_liters,
         avg_monthly_milk_liters, lowest_monthly_milk_liters, highest_monthly_milk_liters,
         average_inventory, credit_period_given_days,
         top5_farmer_collection_liters, highest_farmer_quantity_liters, lowest_farmer_quantity_liters,
         total_number_of_farmers, avg_farmer_quantity_liters, collection_days_positive,
+        collection_days_category,
 
         // Loan Recovery
         total_member_loans, npa_member_loans, overdue_member_loans,

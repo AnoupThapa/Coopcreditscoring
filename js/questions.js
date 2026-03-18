@@ -879,15 +879,16 @@ const QUESTIONNAIRE = {
                 },
                 {
                     // S.N 102  |  sheet: audit_findings_count — dropdown
+                    // DropdownOptions: 'Qualified', 'Few', 'None'
+                    // Model: None→25pts, Few→15pts, Qualified→0pts
                     id: 'audit_findings_count', type: 'select',
                     labelEng: 'Number of audit observations / issues?',
                     labelNep: 'अडिटमा भेटिएका कमजोरीको संख्या कति छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: '0', label: 'None / कुनै पनि छैन' },
-                        { value: '1', label: '1–2 minor observations / १–२ साना' },
-                        { value: '3', label: '3–5 observations / ३–५ कमजोरी' },
-                        { value: '6', label: '6+ major observations / ६+ ठूला कमजोरी' }
+                        { value: 'None', label: 'None — no issues / कुनै पनि छैन' },
+                        { value: 'Few', label: 'Few — minor observations / थोरै' },
+                        { value: 'Qualified', label: 'Qualified — major issues / योग्य' }
                     ]
                 }
             ]
@@ -970,9 +971,9 @@ const QUESTIONNAIRE = {
                     labelNep: 'के दूध सङ्कलन, व्यवस्थापन, र भण्डारणका लागि मापदण्डहरू छन्? के तिनीहरूको लिखित दस्तावेज उपलब्ध छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: '85', label: 'Standards and documents exist / मापदण्ड र दस्तावेज छन्' },
-                        { value: '65', label: 'Standards exist, no documents / मापदण्ड छन्, दस्तावेज छैन' },
-                        { value: '15', label: 'No standards / मापदण्ड छैन' }
+                        { value: 'Standards and documents exist. मापदण्ड र दस्तावेज छन्', label: 'Standards and documents exist / मापदण्ड र दस्तावेज छन्' },
+                        { value: 'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन', label: 'Standards exist, no documents / मापदण्ड छन्, दस्तावेज छैन' },
+                        { value: 'No standards (मापदण्ड छैन)', label: 'No standards / मापदण्ड छैन' }
                     ]
                 },
                 {
@@ -1005,9 +1006,9 @@ const QUESTIONNAIRE = {
                     labelNep: 'नियामक पालना भएको छ कि छैन?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Yes', label: 'Full / पूर्ण' },
+                        { value: 'Full', label: 'Full / पूर्ण' },
                         { value: 'Partial', label: 'Partial / आंशिक' },
-                        { value: 'No', label: 'None / कुनै पनि छैन' }
+                        { value: 'None', label: 'None / कुनै पनि छैन' }
                     ]
                 },
                 {
@@ -1073,8 +1074,8 @@ const QUESTIONNAIRE = {
                         { value: '', label: 'Select' },
                         { value: 'Weekly', label: 'Weekly / साप्ताहिक' },
                         { value: 'Monthly', label: 'Monthly / मासिक' },
-                        { value: 'Bi-Weekly', label: 'Quarterly / त्रैमासिक' },
-                        { value: 'Rarely', label: 'Annually / वार्षिक' }
+                        { value: 'Quarterly', label: 'Quarterly / त्रैमासिक' },
+                        { value: 'Annually', label: 'Annually / वार्षिक' }
                     ]
                 },
                 {
@@ -1149,9 +1150,9 @@ const QUESTIONNAIRE = {
                     labelNep: 'पछिल्लो साल सहकारीले गाउँमा के सहयोग गरेको थियो?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'Minimal', label: 'Never / कहिल्यै होइन' },
-                        { value: 'Moderate', label: 'Sometimes / कहिलेकाहीँ' },
-                        { value: 'Significant', label: 'Frequently / बारम्बार' }
+                        { value: 'Never', label: 'Never / कहिल्यै होइन' },
+                        { value: 'Sometimes', label: 'Sometimes / कहिलेकाहीँ' },
+                        { value: 'Frequently', label: 'Frequently / बारम्बार' }
                     ]
                 },
                 {
@@ -1161,9 +1162,9 @@ const QUESTIONNAIRE = {
                     labelNep: 'जब दूध कम हुन्छ वा आपत आउँछ, सहकारी प्रायः के गर्छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: 'No Plan', label: 'Nothing / केही पनि होइन' },
-                        { value: 'Ad-hoc', label: 'Little Preparation / थोरै तयारी' },
-                        { value: 'Moderate', label: 'Normal / सामान्य' },
+                        { value: 'Nothing', label: 'Nothing / केही पनि होइन' },
+                        { value: 'Little Preparation', label: 'Little Preparation / थोरै तयारी' },
+                        { value: 'Normal', label: 'Normal / सामान्य' },
                         { value: 'Proper Plan', label: 'Proper Plan / उचित योजना' }
                     ]
                 }

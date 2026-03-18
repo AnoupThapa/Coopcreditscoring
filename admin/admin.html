@@ -258,11 +258,6 @@
             <i data-lucide="arrow-left"></i> Submissions
           </button>
           <span class="result-coop-breadcrumb" id="rv_coop_breadcrumb"></span>
-          <div class="result-back-bar-actions">
-            <button class="btn-report-action" id="btn_print_report" onclick="printReport()" title="Print report">
-              <i data-lucide="printer"></i><span>Print</span>
-            </button>
-          </div>
         </div>
         <div class="rv-approver-layout">
           <!-- LEFT: Result Viewer -->
@@ -287,6 +282,8 @@
             </div>
             <div class="admin-section-title" style="margin-top:0"><i data-lucide="layout-grid"></i> Score by Category</div>
             <div class="rv-cat-grid" id="rv_cat_grid"></div>
+            <div class="admin-section-title" style="margin-top:20px"><i data-lucide="list"></i> Sub-Indicators by Category</div>
+            <div id="rv_subcat_section"></div>
             <div class="admin-section-title" style="margin-top:20px"><i data-lucide="bar-chart-2"></i> Visual Analytics</div>
             <div class="rv-charts-row">
               <div class="rv-chart-card">
@@ -403,42 +400,6 @@
     }
     navigateAdmin('result');
   }
-</script>
-
-<script>
-/* ── Report Print & Save (PDF) ─────────────────────────────────────────────── */
-
-function _buildPrintTitle() {
-    var sub  = window._adminCurrentSubmission;
-    var name = sub ? (sub.coopName || 'Report') : 'Report';
-    var date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    return name + ' \u2014 Credit Assessment Report \u2014 ' + date;
-}
-
-function printReport() {
-    var sub = window._adminCurrentSubmission;
-    if (!sub) { showAdminToast('No report loaded to print.', 'error'); return; }
-    var prev = document.title;
-    document.title = _buildPrintTitle();
-    document.body.classList.add('printing-report');
-    window.print();
-    document.body.classList.remove('printing-report');
-    document.title = prev;
-}
-
-function saveReportAsPDF() {
-    var sub = window._adminCurrentSubmission;
-    if (!sub) { showAdminToast('No report loaded to save.', 'error'); return; }
-    showAdminToast('Opening print dialog \u2014 choose "Save as PDF" as your printer.', 'info');
-    var prev = document.title;
-    document.title = _buildPrintTitle();
-    document.body.classList.add('printing-report');
-    setTimeout(function () {
-        window.print();
-        document.body.classList.remove('printing-report');
-        document.title = prev;
-    }, 350);
-}
 </script>
 </body>
 </html>

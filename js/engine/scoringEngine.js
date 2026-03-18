@@ -114,14 +114,18 @@ function calculateBuyerShares() {
     if (el31) el31.value = totalSales > 0 ? ((largest / totalSales) * 100).toFixed(4) : 0;
 }
 
-/** S.N 44: Total operating expenses */
+/** S.N 44: Total operating expenses (overhead only)
+ *  Sheet formula: =E38+E39+E40+E41+E42+E43+E44
+ *  = salary + admin + electricity + fuel + maintenance + rent + other_operating
+ *  Does NOT include: raw_milk_purchase_cost, processing_cost, packaging_cost,
+ *                    transport_cost, other_processing_cost (those are COGS)
+ */
 function calculateExpenses() {
-    const ids = [
-        'raw_milk_purchase_cost', 'processing_cost', 'packaging_cost', 'transport_cost',
-        'other_processing_cost', 'salary_expense', 'admin_expense', 'electricity_expense',
+    const overheadIds = [
+        'salary_expense', 'admin_expense', 'electricity_expense',
         'fuel_expense', 'maintenance_expense', 'rent_expense', 'other_operating_expense'
     ];
-    const total = ids.reduce((sum, id) => sum + safeNum(document.getElementById(id)?.value), 0);
+    const total = overheadIds.reduce((sum, id) => sum + safeNum(document.getElementById(id)?.value), 0);
     const el = document.getElementById('total_opex');
     if (el) el.value = total;
 }
@@ -185,19 +189,24 @@ function calculateNetWorth() {
     if (el) el.value = puc + re + res;
 }
 
-/** S.N 80, 90: Milk totals */
+/** S.N 80, 81, 90: Milk totals */
 function calculateMilkMetrics() {
-    // S.N 80: Produced milk = collected - collection loss - processing loss
     const collected  = safeNum(document.getElementById('total_milk_collected_liters')?.value);
     const collLoss   = safeNum(document.getElementById('milk_loss_liters_during_collection')?.value);
     const procLoss   = safeNum(document.getElementById('loss_during_process')?.value);
-    const produced   = Math.max(0, collected - collLoss - procLoss);
-    const el80       = document.getElementById('produced_milk_model_b_liters');
+
+    // S.N 80: Produced milk = collected - collection loss - process loss (Questions sheet)
+    const produced = Math.max(0, collected - collLoss - procLoss);
+    const el80 = document.getElementById('produced_milk_model_b_liters');
     if (el80) el80.value = produced;
 
+    // S.N 81: Avg monthly milk = total / 12 (auto-calc, sheet =E81/12)
+    const el81 = document.getElementById('avg_monthly_milk_liters');
+    if (el81) el81.value = collected > 0 ? (collected / 12).toFixed(2) : 0;
+
     // S.N 90: Average milk per farmer
-    const farmers    = safeNum(document.getElementById('total_number_of_farmers')?.value);
-    const el90       = document.getElementById('avg_farmer_quantity_liters');
+    const farmers = safeNum(document.getElementById('total_number_of_farmers')?.value);
+    const el90 = document.getElementById('avg_farmer_quantity_liters');
     if (el90) el90.value = farmers > 0 ? (collected / farmers).toFixed(2) : 0;
 }
 
