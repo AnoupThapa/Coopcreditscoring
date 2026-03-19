@@ -39,7 +39,7 @@ const TEST_PRESETS = {
         audit_findings_count:'None',key_mgmt_avg_experience_years:12,internal_control_score:'Robust',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards and documents exist. मापदण्ड र दस्तावेज छन्',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Weekly',member_info_transparency:'Always',fund_usage:'Buying Milk',kyc_aml:'Easily Found',income_expense_checked:'Regularly',right_to_information:'Always Beforehand',community_support_level:'Frequently',emergency_response:'Proper Plan'
     },
@@ -67,7 +67,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:8,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Monthly',member_info_transparency:'Mostly',fund_usage:'Buying Milk',kyc_aml:'Mostly',income_expense_checked:'Regularly',right_to_information:'Mostly Beforehand',community_support_level:'Sometimes',emergency_response:'Normal'
     },
@@ -95,7 +95,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:6,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'Yes',storage_availability_flag:'No',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'5',
+        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'High',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Monthly',member_info_transparency:'Sometimes',fund_usage:'Buying Milk',kyc_aml:'Sometimes',income_expense_checked:'Occasionally',right_to_information:'Sometimes beforehand',community_support_level:'Sometimes',emergency_response:'Little Preparation'
     },
@@ -123,7 +123,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Qualified',key_mgmt_avg_experience_years:2,internal_control_score:'Weak',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'No',storage_availability_flag:'No',
         quality_sop_score_model_b:'No standards (मापदण्ड छैन)',
-        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'8',
+        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'Medium',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Annually',member_info_transparency:'Decided among few',fund_usage:'Other things',kyc_aml:'Hard',income_expense_checked:'Never',right_to_information:'Only after implementation',community_support_level:'Never',emergency_response:'Nothing'
     },
@@ -155,7 +155,7 @@ const TEST_PRESETS = {
         audit_findings_count:'None',key_mgmt_avg_experience_years:15,internal_control_score:'Robust',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards and documents exist. मापदण्ड र दस्तावेज छन्',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:2,
         meeting_frequency:'Weekly',member_info_transparency:'Always',fund_usage:'Buying Milk',kyc_aml:'Easily Found',income_expense_checked:'Regularly',right_to_information:'Always Beforehand',community_support_level:'Frequently',emergency_response:'Proper Plan'
     },
@@ -183,7 +183,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:8,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:5,
         meeting_frequency:'Monthly',member_info_transparency:'Mostly',fund_usage:'Buying Milk',kyc_aml:'Mostly',income_expense_checked:'Regularly',right_to_information:'Mostly Beforehand',community_support_level:'Sometimes',emergency_response:'Normal'
     },
@@ -211,7 +211,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:6,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'Yes',storage_availability_flag:'No',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'5',
+        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'High',
         credit_history_banks:'Watch List',dpd_days_banks:12,
         meeting_frequency:'Monthly',member_info_transparency:'Sometimes',fund_usage:'Buying Milk',kyc_aml:'Sometimes',income_expense_checked:'Occasionally',right_to_information:'Sometimes beforehand',community_support_level:'Sometimes',emergency_response:'Little Preparation'
     },
@@ -239,7 +239,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Qualified',key_mgmt_avg_experience_years:2,internal_control_score:'Weak',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'No',storage_availability_flag:'No',
         quality_sop_score_model_b:'No standards (मापदण्ड छैन)',
-        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'8',
+        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'Medium',
         credit_history_banks:'Substandard',dpd_days_banks:30,
         meeting_frequency:'Annually',member_info_transparency:'Decided among few',fund_usage:'Other things',kyc_aml:'Hard',income_expense_checked:'Never',right_to_information:'Only after implementation',community_support_level:'Never',emergency_response:'Nothing'
     },
@@ -271,7 +271,7 @@ const TEST_PRESETS = {
         audit_findings_count:'None',key_mgmt_avg_experience_years:14,internal_control_score:'Robust',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards and documents exist. मापदण्ड र दस्तावेज छन्',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Weekly',member_info_transparency:'Always',fund_usage:'Buying Milk',kyc_aml:'Easily Found',income_expense_checked:'Regularly',right_to_information:'Always Beforehand',community_support_level:'Frequently',emergency_response:'Proper Plan'
     },
@@ -299,7 +299,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:9,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Monthly',member_info_transparency:'Mostly',fund_usage:'Buying Milk',kyc_aml:'Mostly',income_expense_checked:'Regularly',right_to_information:'Mostly Beforehand',community_support_level:'Sometimes',emergency_response:'Normal'
     },
@@ -327,7 +327,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:5,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'Yes',storage_availability_flag:'No',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'5',
+        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'High',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Monthly',member_info_transparency:'Sometimes',fund_usage:'Buying Milk',kyc_aml:'Sometimes',income_expense_checked:'Occasionally',right_to_information:'Sometimes beforehand',community_support_level:'Sometimes',emergency_response:'Little Preparation'
     },
@@ -355,7 +355,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Qualified',key_mgmt_avg_experience_years:1,internal_control_score:'Weak',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'No',storage_availability_flag:'No',
         quality_sop_score_model_b:'No standards (मापदण्ड छैन)',
-        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'8',
+        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'Medium',
         credit_history_banks:'Pass',dpd_days_banks:0,
         meeting_frequency:'Annually',member_info_transparency:'Decided among few',fund_usage:'Other things',kyc_aml:'Hard',income_expense_checked:'Never',right_to_information:'Only after implementation',community_support_level:'Never',emergency_response:'Nothing'
     },
@@ -387,7 +387,7 @@ const TEST_PRESETS = {
         audit_findings_count:'None',key_mgmt_avg_experience_years:16,internal_control_score:'Robust',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards and documents exist. मापदण्ड र दस्तावेज छन्',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Full',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:2,
         meeting_frequency:'Weekly',member_info_transparency:'Always',fund_usage:'Buying Milk',kyc_aml:'Easily Found',income_expense_checked:'Regularly',right_to_information:'Always Beforehand',community_support_level:'Frequently',emergency_response:'Proper Plan'
     },
@@ -415,7 +415,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:10,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'Yes',fleet_availability_percent:'Yes',storage_availability_flag:'Yes',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'2',
+        insurance_coverage_flag:'Yes',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'Low',
         credit_history_banks:'Pass',dpd_days_banks:5,
         meeting_frequency:'Monthly',member_info_transparency:'Mostly',fund_usage:'Buying Milk',kyc_aml:'Mostly',income_expense_checked:'Regularly',right_to_information:'Mostly Beforehand',community_support_level:'Sometimes',emergency_response:'Normal'
     },
@@ -443,7 +443,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Few',key_mgmt_avg_experience_years:5,internal_control_score:'Adequate',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'Yes',storage_availability_flag:'No',
         quality_sop_score_model_b:'Standards exist, no documents मापदण्ड छन्, दस्तावेज छैन',
-        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'5',
+        insurance_coverage_flag:'No',digital_mis_flag:'Yes',regulatory_compliance_flag:'Partial',climatic_risk_score:'High',
         credit_history_banks:'Watch List',dpd_days_banks:15,
         meeting_frequency:'Monthly',member_info_transparency:'Sometimes',fund_usage:'Buying Milk',kyc_aml:'Sometimes',income_expense_checked:'Occasionally',right_to_information:'Sometimes beforehand',community_support_level:'Sometimes',emergency_response:'Little Preparation'
     },
@@ -471,7 +471,7 @@ const TEST_PRESETS = {
         audit_findings_count:'Qualified',key_mgmt_avg_experience_years:1,internal_control_score:'Weak',
         lending_policy_compliance_flag:'No',fleet_availability_percent:'No',storage_availability_flag:'No',
         quality_sop_score_model_b:'No standards (मापदण्ड छैन)',
-        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'8',
+        insurance_coverage_flag:'No',digital_mis_flag:'No',regulatory_compliance_flag:'None',climatic_risk_score:'Medium',
         credit_history_banks:'Substandard',dpd_days_banks:45,
         meeting_frequency:'Annually',member_info_transparency:'Decided among few',fund_usage:'Other things',kyc_aml:'Hard',income_expense_checked:'Never',right_to_information:'Only after implementation',community_support_level:'Never',emergency_response:'Nothing'
     }

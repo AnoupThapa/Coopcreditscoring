@@ -551,10 +551,15 @@ function runModel(calc, data) {
     add(CAT8, 'Regulatory Compliance',
         reg === 'Full' || reg === 'Yes' ? 15 : reg === 'Partial' ? 5 : 0,
         15, 'Darta, Tax, NRB Reporting Compliance', reg || 'No');
-    // Climatic: handle string ('Low'/'Medium'/'High') and old numeric (2/5/8)
-    const climRaw = data.climatic_risk_str || data.climatic_risk_score || '';
-    const climScore = climRaw === 'Low'    || climRaw === '2' ? 15
-        : climRaw === 'Medium' || climRaw === '5' ? 10 : 0;
+    // Climatic: dropdown uses 'Low'/'Medium'/'High' as values.
+    // Also handles legacy numeric codes for old saved submissions.
+    const climVal = data.climatic_risk_str || data.climatic_risk_score;
+    const climRaw = (climVal !== undefined && climVal !== null) ? String(climVal).trim() : '';
+    const climLower = climRaw.toLowerCase();
+    let climScore = 0;
+    if      (climLower === 'low'    || climLower === '15' || climLower === '2') climScore = 15;
+    else if (climLower === 'medium' || climLower === '10' || climLower === '8') climScore = 10;
+    else if (climLower === 'high'   || climLower === '5')                       climScore = 5;
     add(CAT8, 'Climatic / Input Risk',
         climScore, 15, 'Climatic / Input Risk Level', climRaw || 'N/A');
 

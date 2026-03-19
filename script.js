@@ -34,7 +34,7 @@ const state = {
 const VALID_ROUTES = ['config', 'questions'];
 const STORAGE_KEY  = 'coop_portal_config';
 
-const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpcjBDo5n5HnC-awvHgscBMqtessIuoB7sK_u0Hcl081dv4gjBkU7NQtuwKEHmqRlMJw/exec';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzMJCPKlKOVZ9EAm5Cast8lNppl8xAJzS5OtOza3bWLRZgffI8tKqff3Tm1TKHDRI3XSw/exec';
 
 const SCORE_TIERS = [
     { min: 0,   max: 499,  label: 'D Risk', riskClass: 'high-risk',  color: '#b91c1c', bg: '#fee2e2' },
@@ -222,7 +222,7 @@ function handleCalculateClick() {
 
             const localId = saveSubmissionLocally(inputs, result);
 
-            submitToGAS(inputs, result).then(function(gasId) {
+            submitToGAS(inputs, result, localId).then(function(gasId) {
                 hideLoading();
                 showSuccessScreen(result, gasId || localId);
             }).catch(function() {
@@ -276,7 +276,8 @@ function saveSubmissionLocally(inputs, result) {
         const KEY  = 'coop_submissions';
         const all  = JSON.parse(localStorage.getItem(KEY) || '[]');
         const coopNameEl = document.getElementById('coop_name');
-        const localId = Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
+        const _h = () => Math.floor(Math.random()*0xFFFFFFFF).toString(16).toUpperCase().padStart(8,'0');
+        const localId = 'SUB-' + _h().slice(0,8) + '-' + _h().slice(0,3);
         const submission = {
             id:             localId,
             submittedAt:    new Date().toISOString(),
@@ -302,7 +303,7 @@ function saveSubmissionLocally(inputs, result) {
 }
 
 // ── Submit to GAS ─────────────────────────────────────────────────────────────
-async function submitToGAS(answers, result) {
+async function submitToGAS(answers, result, submissionId) {
     if (!GOOGLE_WEB_APP_URL) {
         console.info('[Submission] GOOGLE_WEB_APP_URL not set — skipping submission.');
         return null;
@@ -318,6 +319,7 @@ async function submitToGAS(answers, result) {
 
         const payload = {
             action:     'submitAnswers',
+            submissionId: submissionId,
             answers,                    // includes model_type + customer_type (injected above)
             score:      result.totalScore,
             riskTier:   result.riskCategory,
@@ -348,20 +350,36 @@ async function submitToGAS(answers, result) {
         const bodyStr = JSON.stringify(payload);
         JSON.parse(bodyStr); // throws if malformed
 
-        const r = await fetch(GOOGLE_WEB_APP_URL, {
-            method:   'POST',
-            headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
-            body:     bodyStr,
-            redirect: 'follow'
-        });
+        // GAS redirects via echo?user_content_key=… causing ERR_CONNECTION_CLOSED.
+        // redirect:'manual' catches this as type='opaqueredirect' — treat as success
+        // and return the client-generated submissionId sent in the payload.
+        const controller = new AbortController();
+        const _timer = setTimeout(() => controller.abort(), 15000);
+        let r;
+        try {
+            r = await fetch(GOOGLE_WEB_APP_URL, {
+                method:   'POST',
+                headers:  { 'Content-Type': 'text/plain;charset=utf-8' },
+                body:     bodyStr,
+                redirect: 'manual',
+                signal:   controller.signal
+            });
+        } finally {
+            clearTimeout(_timer);
+        }
+        if (r.type === 'opaqueredirect' || r.status === 0) {
+            showToast('Data submitted successfully.', 'success');
+            return submissionId;
+        }
         const text = await r.text();
         if (text.trim().startsWith('<')) throw new Error('GAS returned HTML — check deploy settings.');
         const data = JSON.parse(text);
         if (data.success) {
             showToast('Data submitted successfully.', 'success');
-            return data.submissionId || null;
+            return data.submissionId || submissionId;
         } else {
             showToast('Submission warning: ' + (data.error || 'unknown'), 'warn');
+            return submissionId;
         }
     } catch (err) {
         console.warn('[Submission] Failed:', err.message);

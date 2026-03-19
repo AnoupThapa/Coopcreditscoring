@@ -26,7 +26,7 @@
  */
 
 // ── GAS Backend URL ──────────────────────────────────────────────────────────
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpcjBDo5n5HnC-awvHgscBMqtessIuoB7sK_u0Hcl081dv4gjBkU7NQtuwKEHmqRlMJw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMJCPKlKOVZ9EAm5Cast8lNppl8xAJzS5OtOza3bWLRZgffI8tKqff3Tm1TKHDRI3XSw/exec';
 
 // ── Session Config ────────────────────────────────────────────────────────────
 const SESSION_KEY        = 'adminSession';

@@ -1211,16 +1211,45 @@ body {
   }
 
   .rv-hero {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    border: 1pt solid #cbd5e1 !important;
+    border-radius: 8pt !important; padding: 0 !important; color: #0f172a !important;
+    display: grid !important; grid-template-columns: 160pt 1fr !important;
+    gap: 0 !important; margin-bottom: 16pt !important;
+    overflow: hidden !important;
+  }
+  .rv-hero-left {
     background: #1e3a6e !important;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    border-radius: 8pt !important; padding: 16pt !important; color: #fff !important;
-    display: grid !important; grid-template-columns: 180pt 1fr !important;
-    gap: 12pt !important; margin-bottom: 16pt !important;
+    padding: 16pt !important;
+  }
+  .rv-hero-right {
+    background: #fff !important;
+    padding: 14pt !important;
   }
   .rv-hero-score { font-size: 36pt !important; font-weight: 800 !important; color: #fff !important; }
   .rv-hero-label, .rv-hero-out { color: rgba(255,255,255,0.8) !important; }
-  .rv-meta-label { font-size: 8pt !important; color: rgba(255,255,255,0.6) !important; }
-  .rv-meta-val   { font-size: 10pt !important; color: #fff !important; }
+
+  /* Meta grid inside rv-hero-right: dark text on white cards */
+  .rv-meta-item {
+    background: #f8fafc !important;
+    border: 0.5pt solid #e2e8f0 !important;
+    border-radius: 4pt !important;
+    padding: 6pt 8pt !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .rv-meta-label {
+    font-size: 7.5pt !important; color: #64748b !important;
+    font-weight: 700 !important; text-transform: uppercase !important;
+    letter-spacing: 0.4px !important; display: block !important;
+    margin-bottom: 2pt !important;
+  }
+  .rv-meta-val {
+    font-size: 9.5pt !important; color: #0f172a !important;
+    font-weight: 700 !important; display: block !important;
+    white-space: normal !important; overflow-wrap: break-word !important;
+  }
 
   .rv-cat-grid {
     display: grid !important; grid-template-columns: 1fr 1fr 1fr !important;
