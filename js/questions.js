@@ -1018,9 +1018,9 @@ const QUESTIONNAIRE = {
                     labelNep: 'मौसम जोखिम (Climatic Risk Score) कति छ?',
                     options: [
                         { value: '', label: 'Select' },
-                        { value: '8', label: 'Low / कम' },
-                        { value: '5', label: 'Medium / मध्यम' },
-                        { value: '2', label: 'High / उच्च' }
+                        { value: '15', label: 'Low / कम' },
+                        { value: '10', label: 'Medium / मध्यम' },
+                        { value: '5', label: 'High / उच्च' }
                     ]
                 }
             ]
