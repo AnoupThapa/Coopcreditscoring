@@ -94,9 +94,13 @@ function transformData(rawInputs) {
                        fuel_expense + maintenance_expense + rent_expense +
                        other_operating_expense;
 
-    // COGS = processing costs only (sheet Data!D19 = SUM(Questions!D34:D37))
-    // = processing + packaging + transport + other_processing_cost
-    const cogs = processing_cost + packaging_cost + transport_cost + other_processing_cost;
+    // COGS depends on model type:
+    //   Collection Only (Model A)        : raw milk purchase cost only
+    //   Collection & Processing (Model B) : raw milk + processing + packaging + transport + other processing
+    const isModelB = model_type.toLowerCase().includes('processing');
+    const cogs = isModelB
+        ? raw_milk_purchase_cost + processing_cost + packaging_cost + transport_cost + other_processing_cost
+        : raw_milk_purchase_cost;
 
     // S.N 45: lean month expense = total_opex / 12  (auto, no user input)
     const lean_month_expense = total_opex / 12;
@@ -186,7 +190,8 @@ function transformData(rawInputs) {
 
     const lowest_monthly_milk_liters  = n('lowest_monthly_milk_liters');
     const highest_monthly_milk_liters = n('highest_monthly_milk_liters');
-    const average_inventory           = n('average_inventory');
+    // Fallback to current inventory if average_inventory field is blank
+    const average_inventory = n('average_inventory') || n('inventory');
     const credit_period_given_days    = n('credit_period_given_days');
     const top5_farmer_collection_liters   = n('top5_farmer_collection_liters');
     const highest_farmer_quantity_liters  = n('highest_farmer_quantity_liters');

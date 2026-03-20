@@ -70,14 +70,14 @@ function runModel(calc, data) {
     // Higher value = more inventory days credit given to buyers = better
     const invD = calc.inventory_days;
     add(CAT1, 'Inventory Days',
-        invD >= 60 ? 30 : invD >= 90 ? 24 : invD >= 120 ? 18 : invD >= 180 ? 10 : 0,
+        invD >= 180 ? 0 : invD >= 120 ? 10 : invD >= 90 ? 18 : invD >= 60 ? 24 : 30,
         30, '(Avg Inventory / COGS) × 365', Math.round(invD) + ' days');
 
     // 1d. Receivable Days — 40 pts  (lower = better = faster payment from buyers)
     // Sheet: IF(>=90,0, IF(>=60,12, IF(>=45,24, IF(>=30,32, 40))))
     const recD = calc.receivable_days;
     add(CAT1, 'Receivable Days',
-        recD >= 90 ? 0 : recD >= 60 ? 12 : recD >= 45 ? 24 : recD >= 30 ? 32 : 40,
+        recD >= 90 ? 0 : recD >= 60 ? 12 : recD >= 45 ? 24 : recD >= 30 ? 15 : 40,
         40, '(Accounts Receivable / Total Revenue) × 365', Math.round(recD) + ' days');
 
     // ── 2. MILK SUPPLY & OPERATIONAL STABILITY (150 pts) ─────────────────────
@@ -322,7 +322,7 @@ function runModel(calc, data) {
     // 10e. Payment Score — 10 pts
     const ps = calc.payment_score_frac;
     add(CAT10, 'Buyer Payment Score',
-        ps >= 0.90 ? 10 : ps >= 0.70 ? 5 : 0,
+        ps >= 0.90 ? 10 : ps >= 0.80 ? 9 : ps >= 0.70 ? 7 : ps >= 0.50 ? 5 : 0,
         10, '1 − (Avg Payment Days / 90)', (ps * 100).toFixed(1) + '%');
 
     // ── 11. BEHAVIOURAL & DUE DILIGENCE RISK (40 pts, 8 × 5 pts) ─────────────

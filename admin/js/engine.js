@@ -423,7 +423,7 @@ function runModel(calc, data) {
     // Sheet: IF(>=90,0, IF(>=60,12, IF(>=45,24, IF(>=30,32, 40))))
     const recD = calc.receivable_days;
     add(CAT1, 'Receivable Days',
-        recD >= 90 ? 0 : recD >= 60 ? 12 : recD >= 45 ? 24 : recD >= 30 ? 32 : 40,
+        recD >= 90 ? 0 : recD >= 60 ? 12 : recD >= 45 ? 24 : recD >= 30 ? 15 : 40,
         40, '(Accounts Receivable / Total Revenue) × 365', Math.round(recD) + ' days');
 
     // ── 2. Milk Supply & Operational Stability (150 pts) ──────────────────────
@@ -551,15 +551,10 @@ function runModel(calc, data) {
     add(CAT8, 'Regulatory Compliance',
         reg === 'Full' || reg === 'Yes' ? 15 : reg === 'Partial' ? 5 : 0,
         15, 'Darta, Tax, NRB Reporting Compliance', reg || 'No');
-    // Climatic: dropdown uses 'Low'/'Medium'/'High' as values.
-    // Also handles legacy numeric codes for old saved submissions.
-    const climVal = data.climatic_risk_str || data.climatic_risk_score;
-    const climRaw = (climVal !== undefined && climVal !== null) ? String(climVal).trim() : '';
-    const climLower = climRaw.toLowerCase();
-    let climScore = 0;
-    if      (climLower === 'low'    || climLower === '15' || climLower === '2') climScore = 15;
-    else if (climLower === 'medium' || climLower === '10' || climLower === '8') climScore = 10;
-    else if (climLower === 'high'   || climLower === '5')                       climScore = 5;
+    // Climatic: handle string ('Low'/'Medium'/'High') and old numeric (2/5/8)
+    const climRaw = data.climatic_risk_str || data.climatic_risk_score || '';
+    const climScore = climRaw === 'Low'    || climRaw === '2' ? 15
+        : climRaw === 'Medium' || climRaw === '5' ? 10 : 0;
     add(CAT8, 'Climatic / Input Risk',
         climScore, 15, 'Climatic / Input Risk Level', climRaw || 'N/A');
 
@@ -601,7 +596,7 @@ function runModel(calc, data) {
         10, 'Buyers Under Contract / Total Buyers', (ccFrac * 100).toFixed(1) + '%');
     const ps = data.payment_score_frac || 0;
     add(CAT10, 'Buyer Payment Score',
-        ps >= 0.90 ? 10 : ps >= 0.70 ? 5 : 0,
+        ps >= 0.90 ? 10 : ps >= 0.80 ? 9 : ps >= 0.70 ? 7 : ps >= 0.50 ? 5 : 0,
         10, '1 − (Avg Payment Days / 90)', (ps * 100).toFixed(1) + '%');
 
     // ── 11. Behavioural & Due Diligence Risk (40 pts, 8 × 5 pts) ─────────────
