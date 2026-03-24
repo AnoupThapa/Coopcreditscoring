@@ -58,6 +58,10 @@
       </div>
       <div class="admin-header-right">
         <span class="admin-badge" id="admin_user_badge">Admin</span>
+        <button id="btn_add_admin" class="btn-logout" style="display:none; background:var(--primary); color:#fff; border-color:var(--primary);" onclick="openAddAdminModal()">
+          <i data-lucide="user-plus" style="width:14px;height:14px;"></i>
+          <span class="btn-logout-label">Add Admin</span>
+        </button>
         <button onclick="logout()" class="btn-logout">
           <i data-lucide="log-out" style="width:14px;height:14px;"></i>
           <span class="btn-logout-label">Logout</span>
@@ -373,9 +377,9 @@
     const s = (function () {
       try { return JSON.parse(sessionStorage.getItem('adminSession') || 'null'); } catch { return null; }
     })();
-    if (s && s.email) {
+    if (s && (s.email || s.username)) {
       const badge = document.getElementById('admin_user_badge');
-      if (badge) badge.textContent = s.email;
+      if (badge) badge.textContent = s.username || s.email;
     }
   })();
   document.addEventListener('DOMContentLoaded', function () {
@@ -406,5 +410,73 @@
     navigateAdmin('result');
   }
 </script>
+<!-- ===== RESPONSES MODAL ===== -->
+<div id="responses_modal" class="resp-modal-overlay" onclick="if(event.target===this)closeResponsesModal()">
+  <div class="resp-modal-panel" role="dialog" aria-modal="true" aria-labelledby="resp_modal_title">
+    <div class="resp-modal-header">
+      <div class="resp-modal-title-group">
+        <div class="resp-modal-icon"><i data-lucide="list"></i></div>
+        <div>
+          <div class="resp-modal-coop" id="resp_modal_title">View Responses</div>
+          <div class="resp-modal-meta" id="resp_modal_meta"></div>
+        </div>
+      </div>
+      <button class="resp-modal-close" onclick="closeResponsesModal()" aria-label="Close">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="resp-modal-body" id="resp_modal_body">
+      <!-- Q&A rows injected here -->
+    </div>
+  </div>
+</div>
+<!-- ===== ADD ADMIN MODAL (Super Admin Only) ===== -->
+<div id="add_admin_modal" class="resp-modal-overlay" onclick="if(event.target===this)closeAddAdminModal()">
+  <div class="resp-modal-panel" style="max-width:400px;" role="dialog" aria-modal="true" aria-labelledby="add_admin_title">
+    <div class="resp-modal-header">
+      <div class="resp-modal-title-group">
+        <div class="resp-modal-icon" style="color:var(--primary);background:rgba(37,99,235,0.1);"><i data-lucide="user-plus"></i></div>
+        <div>
+          <div class="resp-modal-coop" id="add_admin_title">Add New Admin</div>
+          <div class="resp-modal-meta">Create a new admin or superadmin account</div>
+        </div>
+      </div>
+      <button class="resp-modal-close" onclick="closeAddAdminModal()" aria-label="Close">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="resp-modal-body" style="padding:24px;">
+      <form id="addAdminForm" onsubmit="submitNewAdmin(event)">
+        <div class="input-grp" style="margin-bottom:16px;">
+          <label for="new_admin_email" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--ink-2)">Email Address</label>
+          <input type="email" id="new_admin_email" required placeholder="admin@domain.com"
+                 style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;font-size:14px;outline:none;transition:border-color 0.2s;">
+        </div>
+        <div class="input-grp" style="margin-bottom:16px;">
+          <label for="new_admin_username" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--ink-2)">Username</label>
+          <input type="text" id="new_admin_username" required placeholder="admin-1"
+                 style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;font-size:14px;outline:none;transition:border-color 0.2s;">
+        </div>
+        <div class="input-grp" style="margin-bottom:16px;">
+          <label for="new_admin_role" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--ink-2)">Role</label>
+          <select id="new_admin_role" required style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;font-size:14px;background:#fff;outline:none;">
+            <option value="admin">Admin</option>
+            <option value="superadmin">Super Admin</option>
+          </select>
+        </div>
+        <div class="input-grp" style="margin-bottom:24px;">
+          <label for="new_admin_password" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--ink-2)">Secure Password</label>
+          <input type="text" id="new_admin_password" required placeholder="Generate or type a strong password"
+                 style="width:100%;padding:10px 12px;border:1px solid var(--border-light);border-radius:6px;font-family:inherit;font-size:14px;outline:none;transition:border-color 0.2s;">
+        </div>
+        <button type="submit" id="btn_submit_new_admin"
+                style="width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-size:14px;transition:opacity 0.2s;">
+          <i data-lucide="plus-circle" style="width:16px;height:16px;"></i> <span id="btn_submit_new_admin_lbl">Create Admin</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

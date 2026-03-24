@@ -34,7 +34,7 @@ const state = {
 const VALID_ROUTES = ['config', 'questions'];
 const STORAGE_KEY  = 'coop_portal_config';
 
-const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzMJCPKlKOVZ9EAm5Cast8lNppl8xAJzS5OtOza3bWLRZgffI8tKqff3Tm1TKHDRI3XSw/exec';
+const GOOGLE_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzUJid9Q7bePYbSwnmNsbuUohAIDGeCfCz31V6j7pOLr2C8PnjwaDFW2l47VstJfv56Kw/exec';
 
 const SCORE_TIERS = [
     { min: 0,   max: 499,  label: 'D Risk', riskClass: 'high-risk',  color: '#b91c1c', bg: '#fee2e2' },
